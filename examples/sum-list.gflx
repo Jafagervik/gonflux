@@ -1,0 +1,16 @@
+fun sum(a: [i32], acc: i32) -> i32 =
+    ret match a =
+        [] => acc,
+        h :: t => h + sum(a, acc+t),
+        h :: [] => acc + h
+end
+
+
+
+proc main() = 
+    a: i32 = 1..5
+    b: i32 = 1..10..2
+
+    print(sum(a, 0))
+    print(sum(b, 2))
+end
