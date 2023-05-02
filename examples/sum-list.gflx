@@ -1,16 +1,16 @@
-fun sum(a: [i32], acc: i32) -> i32 =
+fun sum(a, acc) ->
     ret match a =
         [] => acc,
         h :: t => h + sum(a, acc+t),
         h :: [] => acc + h
 end
 
+proc main() ->  
+    a = 1..5   // List from 1 to 5, can be changed
+    b = 1..10..2 // List from 1 to 10 with step of 2, cannnot change
 
-
-proc main() = 
-    a: i32 = 1..5
-    b: i32 = 1..10..2
-
-    print(sum(a, 0))
-    print(sum(b, 2))
+    print(sum(a, 0)) // call function
+    print(sum(b, 2)) // call function 
 end
+
+main()

@@ -1,0 +1,38 @@
+proc sender(t) ->
+    if (3 > 2) then
+        chanWrite(t, 2)
+        0
+    elif (1 == 2) then 
+        print hello
+    else then 
+        2
+    end
+end
+
+fun receiver(t) ->
+    if (3 > 2) then
+        val = chanRecv
+        val
+    elif (1 == 2) then 
+        42
+    else then 
+        2
+    end
+end
+
+proc main() ->
+    chan = newChannel()
+
+    a = chanspawn(chan)
+    sender(a)
+
+    b = chanspawn(chan)
+    receiver(b)
+
+    waitchan(chan)
+
+    print(a)
+    print(b)
+end
+
+main()

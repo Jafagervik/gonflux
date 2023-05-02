@@ -1,8 +1,9 @@
 const std = @import("std");
-const ERR = @import("errors");
 
-const AST = @import("parser").AST;
+const AST = @import("ast.zig");
 
-pub fn interpret(ast: AST) anyerror!void {
-    std.debug.print("22 {}", .{ast});
+pub fn interpret(ast: AST.AST) anyerror!void {
+    std.debug.print("{any}", .{ast});
 }
+
+pub const Interpreter = struct {};

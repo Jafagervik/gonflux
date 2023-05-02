@@ -1,0 +1,24 @@
+fun do_op() 
+    x = "Hello"
+    x ++ " World\n" 
+end
+
+
+proc main() 
+    a = spawn(do_op)
+    b = spawn(do_op)
+    c = spawn(do_op)
+
+    d = spawn(\x y -> x + y)
+
+    // Potentially add a waitforall 
+    waitfor(a, b, c, d)
+
+    print(a)
+    print(b)
+    print(c)
+    print(d)
+end
+
+
+main()
