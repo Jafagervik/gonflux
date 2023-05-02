@@ -16,7 +16,7 @@
 
 `*.gflx` will work
 
-<img src="https://raw.githubusercontent.com/arshajii/rho/master/resources/logo.png" alt="logo" width="300">
+<img src="https://preview.redd.it/ewvjkm3x1po21.png?auto=webp&s=0053b570aa3033800de5a50b20c7d348b9ff807f" alt="logo" width="300">
 
 
 
