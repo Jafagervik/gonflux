@@ -43,7 +43,10 @@ pub const OperatorToken = enum { PLUS, MINUS, MULT, DIV, GT, LT, EQ, NEQ, GEQ, L
 /// This function goes through all the text from the file,
 /// and then tokenizes the input
 pub const Lexer = struct {
-    const root = @This();
+    const Self = @This();
+
+    // Current position in file
+    pos: usize,
 
     pub fn tokenize(file: std.fs.File) anyerror![]Token {
         var token_list = std.ArrayList(Token).init();
@@ -53,7 +56,7 @@ pub const Lexer = struct {
         while (try next_line(file)) |line| {
 
             // Walk by char by char
-            while (try get_char()) |char| {
+            while (try get_char(line)) |char| {
                 switch (char) {
                     'a' => undefined,
                     'e' => undefined,
@@ -66,9 +69,29 @@ pub const Lexer = struct {
     }
 
     /// Yield a new file line by line
-    fn next_line(file: std.fs.File) void {}
+    /// TODO: file should here be a buffer we take the the first line of
+    fn next_line(file: *[]u8) anyerror![]u8 {
+        var idx = 0;
 
-    fn get_char() void {}
+        var line_buf: [:0]u8 = undefined;
+
+        // TODO: Make sure we're only reading what we need to
+        while (file[idx] != '\n') : (idx += 1) {
+            line_buf[idx] = file[idx];
+        }
+
+        return line_buf;
+    }
+
+    fn get_char(line: [:0]u8) void {
+        var idx: usize = 0;
+
+        for (line) {
+
+        }
+
+
+    }
 };
 
 test "docs" {

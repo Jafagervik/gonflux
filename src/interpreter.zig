@@ -5,12 +5,12 @@ const AST = @import("ast.zig").AST;
 
 /// Interpreter written for GonFLUX
 pub const Interpreter = struct {
-    /// filename
-    var filename: []u8 = undefined;
+    var filename: [:0]u8 = undefined;
 
-    fn build(file_name: []u8) Interpreter {
-        filename = file_name;
-        return Interpreter{ .filename = file_name };
+    const Self = @This();
+
+    fn build(self: *Self, file_name: [:0]u8) void {
+        self.filename = file_name;
     }
 
     /// Run the interpreter with given filename
