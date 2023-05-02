@@ -15,3 +15,7 @@ pub const GonFLUXError = error{
     ParseError,
     InterpreterError,
 };
+
+test "docs" {
+    @import("std").testing.refAllDecls(@This());
+}
