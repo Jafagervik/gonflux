@@ -1,5 +1,13 @@
 const std = @import("std");
 
+/// Check whether or not a given char is
+/// space, new_line or tab
+///
+/// See doc for what is counted as space
+pub fn is_space(c: u8) bool {
+    return std.ascii.isWhitespace(c);
+}
+
 /// Read file from input line to parse and read from
 /// In the start we want to be able to run basic files
 /// But sooner rather than later we want to transform

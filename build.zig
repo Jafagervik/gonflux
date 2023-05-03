@@ -28,6 +28,7 @@ pub fn build(b: *std.build.Builder) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
+    // TODO: Add recursive testing through various folders
     const exe_tests = b.addTest("./test/lexer.zig");
     exe_tests.setTarget(target);
     exe_tests.setBuildMode(mode);
