@@ -1,8 +1,14 @@
 const std = @import("std");
+
+const TokenType = @import("types.zig").TokenType;
+
 const is_space = @import("helpers.zig").is_space;
 
 /// TODO: Improve
 const lexererr = @import("errors").LexerErrors;
+
+/// Symbol used for single line comments
+pub const COMMENT_SYMBOL = '#';
 
 /// Representation of a token in this magnificent language
 pub const Token = struct {
@@ -22,12 +28,6 @@ pub const Token = struct {
     /// We call it BOL for beginning of line
     bol: usize,
 };
-
-/// Full list of all supported TokenTypes
-pub const TokenType = enum { OperatorToken, IDENT, BOOL, FUN, PROC, END, EOF, STRING, CHAR, ARROW, MATCH, COMMENT, PRINT };
-
-/// Operator Token
-pub const OperatorToken = enum { PLUS, MINUS, MULT, DIV, GT, LT, EQ, NEQ, GEQ, LEQ, MOD };
 
 /// This function goes through all the text from the file,
 /// and then tokenizes the input
@@ -75,7 +75,9 @@ pub const Lexer = struct {
     //   INTERNALS
     // ==========================
     fn trim_left(self: *Self) void {
-        while (self.is_not_empty() and is_space(self.source[self.pos])) {}
+        while (self.is_not_empty() and is_space(self.source[self.pos])) {
+            self.chop_char();
+        }
     }
 
     fn chop_char(self: *Self) void {
@@ -91,8 +93,18 @@ pub const Lexer = struct {
         }
     }
 
-    fn next_token(self: *Self) void {
+    /// Get the next token in this file
+    /// False means end of token
+    fn next_token(self: *Self) bool {
         self.trim_left();
+
+        // Ignore comments...
+        while (self.is_not_empty() and self.source[self.pos] == COMMENT_SYMBOL) {
+            self.drop_line();
+            self.trim_left();
+        }
+
+        if (self.empty()) return false;
     }
 
     fn get_char(line: []u8) u8 {
@@ -106,6 +118,11 @@ pub const Lexer = struct {
     /// Check that cursor is not totally out
     fn is_not_empty(self: *Self) bool {
         return self.pos < self.source.len;
+    }
+
+    /// Check if this is empty
+    fn is_empty(self: *Self) bool {
+        return !self.is_not_empty();
     }
 
     /// Yield a new file line by line
