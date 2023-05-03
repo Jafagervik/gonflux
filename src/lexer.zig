@@ -10,23 +10,65 @@ const lexererr = @import("errors").LexerErrors;
 /// Symbol used for single line comments
 pub const COMMENT_SYMBOL = '#';
 
+/// Location directly return the struct
+
+//pub fn Location(fp: []const u8, r: u8, c: u8) type {
+//    return struct {
+//       /// Name of file it happened at
+//        file_path: []const u8 = fp,
+//
+//        /// Row
+//        row: usize = r,
+//
+//       /// Coolumn
+//        col: usize = c,
+//   };
+//}
+
+/// TODO: Find out which of these 2 methods are more idiomatic
+pub const Location = struct {
+    const Self = @This();
+
+    /// fp
+    file_path: []const u8 = undefined,
+
+    row: usize = 0,
+
+    col: usize = 0,
+
+    pub fn init(self: *Self, fp: []const u8, r: usize, c: usize) Self {
+        self.file_path = fp;
+        self.row = r;
+        self.col = c;
+        return self;
+    }
+
+    /// TODO: Write this out to stdout in the future
+    pub fn display(self: *Self) void {
+        std.debug.log("{s} {d} {d}\n", .{ self.file_path, self.row, self.col });
+    }
+};
+
 /// Representation of a token in this magnificent language
 pub const Token = struct {
+    const Self = @This();
+
     /// Token type
     type: TokenType,
 
-    /// Text representation
-    text: []const u8,
+    /// Value of token
+    value: []const u8,
 
-    /// Position in the line it occurs
-    pos: usize,
+    ///  Location
+    location: Location,
 
-    /// Beginning of next linee
-    ///
-    /// Thiis is\n a long\nstring you know\0.
-    ///          ^       ^
-    /// We call it BOL for beginning of line
-    bol: usize,
+    /// Defult Token impl
+    pub fn init(self: *Self, loc: Location, t: TokenType, val: []const u8) Self {
+        self.location = loc;
+        self.type = t;
+        self.value = val;
+        return self;
+    }
 };
 
 /// This function goes through all the text from the file,
@@ -34,17 +76,21 @@ pub const Token = struct {
 pub const Lexer = struct {
     const Self = @This();
 
-    /// Current position in file
-    pos: usize = 0,
+    /// File Path that is no being run
+    file_path: []const u8 = undefined,
+
+    /// Source data to read in from
+    source: []const u8 = undefined,
+
+    // TODO: should this be location instead
+    /// Current position in data, also called cursor
+    cur: usize = 0,
 
     /// Beginning of Line
     bol: usize = 0,
 
     /// Row
     row: usize = 0,
-
-    /// Source data to read in from
-    source: []const u8 = undefined,
 
     pub fn tokenize(self: *Self, file: []const u8) anyerror![]const Token {
         self.source = file;
@@ -60,6 +106,7 @@ pub const Lexer = struct {
         // TODO: Remove if needed
         defer token_list.deinit();
 
+        // TODO: Implement main loop of tokenizer
         // Iterate and get next token
         var token = self.next_token();
 
@@ -67,51 +114,45 @@ pub const Lexer = struct {
             std.debug.print("Token", .{token});
         }
 
-        // Next step is to parse this token list
+        // Return a list over the tokens we want to interact with
         return token_list.items;
     }
 
     // ==========================
     //   INTERNALS
     // ==========================
-    fn trim_left(self: *Self) void {
-        while (self.is_not_empty() and is_space(self.source[self.pos])) {
-            self.chop_char();
-        }
-    }
 
-    fn chop_char(self: *Self) void {
-        if (self.is_not_empty()) {
-            var x = self.source[self.pos];
-            self.pos += 1;
-
-            // We are now at the next line
-            if (x == '\n') {
-                self.bol = self.pos;
-                self.row += 1;
-            }
-        }
-    }
-
+    // TODO: Engineer this a bit better
     /// Get the next token in this file
     /// False means end of token
     fn next_token(self: *Self) bool {
+        // Trim indentation
         self.trim_left();
 
-        // Ignore comments...
+        // Ignore comments
         while (self.is_not_empty() and self.source[self.pos] == COMMENT_SYMBOL) {
             self.drop_line();
             self.trim_left();
         }
 
+        var token = Token{};
+        // TODO: not assigning correct type here
+        token.location = self.cur;
+
         if (self.empty()) return false;
-    }
 
-    fn get_char(line: []u8) u8 {
-        var idx: usize = 0;
+        var loc = self.cur;
 
-        while (idx < line.len) : (idx += 1) {
-            return 0;
+        // Get characters while they're alphanum
+        if (std.ascii.isAlphanumeric(self.source)) {
+            var idx = self.pos;
+
+            while (self.is_not_empty() and std.ascii.isAlphanumeric(self.source(self.pos))) {
+                self.chop_char();
+            }
+
+            // First tokenizer
+            return Token.init(loc, "TOKENNAME", self.source[idx..self.cursor]);
         }
     }
 
@@ -125,22 +166,43 @@ pub const Lexer = struct {
         return !self.is_not_empty();
     }
 
-    /// Yield a new file line by line
-    /// TODO: file should here be a buffer we take the the first line of
-    fn next_line(file: *[]u8) anyerror![]u8 {
-        var idx = 0;
+    // TODO: Implement
+    fn trim_left(self: *Self) void {
+        _ = self;
+        //while (self.is_not_empty() and is_space(self.source[self.pos])) {
+        //    self.chop_char();
+        //}
+    }
 
-        var line_buf: [:0]u8 = undefined;
+    /// "Chops" off characters
+    fn chop_char(self: *Self) void {
+        if (self.is_not_empty()) {
+            var x = self.source[self.pos];
+            self.pos += 1;
 
-        // TODO: Make sure we're only reading what we need to
-        while (file[idx] != '\n') : (idx += 1) {
-            line_buf[idx] = file[idx];
+            // We are now at the next line
+            if (x == '\n') {
+                self.bol = self.pos;
+                self.row += 1;
+            }
         }
-
-        return line_buf;
     }
 };
 
 test "docs" {
     std.testing.refAllDecls(Lexer);
+}
+
+test "lexing" {
+    const fp = "./test_lex.gflx";
+
+    const lexer = Lexer.tokenize(fp);
+    _ = lexer;
+
+    std.testing.expect(2 + 2 == 4);
+    // std.testing.expect(lexer[0] == token1);
+    // std.testing.expect(lexer[0] == token2);
+    // std.testing.expect(lexer[0] == token3);
+    // std.testing.expect(lexer[0] == token4);
+
 }
