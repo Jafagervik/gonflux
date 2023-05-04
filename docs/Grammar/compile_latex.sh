@@ -1,6 +1,4 @@
 ##!/bin/bash
 echo "Compiling Grammar..."
-pdflatex Grammar.tex
-echo "Removing AUX files"
-rm Grammar.aux Grammar.log
+okular Grammar.md
 echo "Successfully compiled Grammar!"
