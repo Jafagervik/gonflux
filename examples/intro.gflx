@@ -1,0 +1,11 @@
+import @std
+
+proc main() -> 
+    print("Hello GonFLUX!\n", {});
+
+    print("1 + 1 = {}\n", {2});
+    
+    inp: str = input("Input your name: \n")
+
+    print("{} my name is {}\n", {"Hello", inp})
+end

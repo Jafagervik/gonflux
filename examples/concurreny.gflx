@@ -1,10 +1,29 @@
-fun do_op() 
+import @std
+import @concurrency
+import @threads
+
+/*
+
+This 
+is
+a 
+multiline 
+comment
+in
+GonFLUX
+
+*/
+
+
+fun do_op() : str -> 
     x = "Hello"
-    x ++ " World\n" 
+
+    // String concatination
+    return x ++ " World\n" 
 end
 
 
-proc main() 
+proc main() -> 
     a = spawn(do_op)
     b = spawn(do_op)
     c = spawn(do_op)

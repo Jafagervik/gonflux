@@ -1,26 +1,53 @@
-# GonFLUX - A Concurrent and Functional Language written in ZIG
+# GonFLUX - A statically typed functional Language written in ZIG
 ===============================================================
-
-## How to run 
-
-1. Clone the repo
-2. Run `./build.sh` or `build.bat` for windows
-3. Add `./gfx` to path
-4. Compile with gfxcc main.gflx or interpret with gfx `main.gflx`
-5. maybe interpret instead with just gflx main.gflx 
-
-
-## Misc
-
-### Language Extension
-
-`*.gflx` will work
 
 <img src="https://preview.redd.it/ewvjkm3x1po21.png?auto=webp&s=0053b570aa3033800de5a50b20c7d348b9ff807f" alt="logo" width="300">
 
+## Why GonFLUX
+
+Generally, programming language with support for concurrency and parallelism
+is not so trivial to understand. Rust, C, C++ are all great and powerful languages,
+but writing solid functional code is not so easy.
+
+Functional languages are inherently stateless, which makes for a great choice 
+when working with communication between threads and processes. 
+
+Languages such as Elixir, Scala, Oz and Haskell all have support for concurrency,
+but the goal of GonFLUX is to create syntax more similar to python or julia, 
+but with statically type checking and still being fully functional.
+
+## Why ZIG
+
+Zig is excellent when it comes to cross compilation. This makes it easy to make 
+this work on every single target set.
+If we need to add  in C code, it's interop with both C and C++ is really easy, 
+making it great to work with for anyone no matter if you've written zig or not.
+It also has more memory safety than C, as well as more types, more builtins.
+
+Also, and this might be the main point. We want to study how it is like creating 
+new languages using newer languages. Historically, C and C++ has been the languages
+of choice if you wanted to make languages. Now, with languages such as Rust, Odin and Zig,
+we can see how development of languages is from a developers experience.
 
 
-Examples
---------
+## Main aspects of this language
+
+- Functional
+- Statically typed 
+- Easy-to-learn syntax
+- Built in support for concurrency and parallelism
+- Process and thread managment should be trivial 
+- A robust and easy to integrate standard library
 
 
+## Core philosofy
+
+This language should be able to create robust applications, while
+also being one to easily teach people about aspects such as atomics, processes,
+semaphores, mutexes, threads, multicore programming, distributed programming and so on
+
+
+## Creation
+
+This project is handled by Uedalab, a computer science lab at Waseda University in
+Tokyo, Japan, under the guidance of prof. UEDA, Kazunori.
