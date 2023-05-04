@@ -16,8 +16,7 @@
 
 ### function ::= TODO 
 
-### lambda ::= 
-
+### lambda ::= BACKSLASH function_params MINUSARROW expression KEYWORD_end
 
 ### identifier ::= char {char_with_number}
 
@@ -25,9 +24,13 @@
 
 ### integer ::= digit {digit}
 
-### float ::= digit {}
+### float ::= integer | { digit {digit } DOT digit {digit} }
 
-### string ::= char {char}
+### string ::= char {char} 
+
+### digit ::= [0-9]
+
+### digit1 ::= [1-9]
 
 ### char ::= [a-zA-Z_]
 
@@ -37,11 +40,43 @@
 
 ### option ::= TODO
 
-### struct ::= KEYWORD_struct identifier MINUSARROW argslist KEYWORD_end
+### struct ::= KEYWORD_struct identifier MINUSARROW function_params KEYWORD_end
 
-### enum ::= KEYWORD_enum identifier MINUSARROW enum_list KEYWORD_end
 
-### fnargs ::= LEFTPAREN argslist RIGHTPAREN 
+## ============
+## MATCH 
+## ============
+
+### match_statement ::= KEYWORD_match LEFTPAREN indentifier RPAREN MINUSARROW match_list KEYWORD_end
+
+### match_list ::= match_clause {match_clause}
+
+### match_clause ::= pattern_list EQUALARROW COMMA
+
+### pattern_list ::= rangelists | LEFTRIGHTCURLYPAREN | head_tail_pattern | UNDERSCORE
+
+### head_tail_pattern :: identifier {COLONCOLON identifier}
+
+### rangelists ::= rangelist | rangelist_no_start | rangelist_no_end
+
+### rangelist ::= integer DOTDOT integer 
+### rangelist_no_start ::= DOTDOT integer
+### rangelist_no_end ::= integer DOTDOT
+
+## NOTE: For now, enum will be an algebraic datatype
+### enum ::= KEYWORD_enum identifier MINUSARROW function_params KEYWORD_end
+
+### fnargs ::= LEFTPAREN function_params RIGHTPAREN 
+
+### function_params ::= variable_definition {COMMA variable_definition}
+
+### variable_definition ::= identifier COLON datatype
+
+
+## ==========================================
+##  TODO: Find out which datatypes we want
+## ==========================================
+### datatype ::= i32 | u32 | str | f32 | bool | char | TODO: add more 
 
 
 ## ==============
@@ -65,6 +100,11 @@
 ## ==========================
 
 ### FunctionKeyword ::= KEYWORD_fn | KEYWORD_proc
+
+
+### empty_list ::= LEFTCURLYPAREN RIGHTCURLYPAREN
+
+### head_tail ::= identifier COLONCOLON
 
 ## =====================
 ##   Every operator used
@@ -90,6 +130,9 @@
 ### RIGHTPAREN :== ')'
 ### LEFTCURLYPAREN :== '['
 ### RIGHTCURLYPAREN :== ']'
+### LEFTRIGHTCURLYPAREN :== '[]'
+### COLONCOLON ::== '::'
+### UNDERSCORE ::= '_'
 
 ## ====================
 ##  KEYWORDS 
