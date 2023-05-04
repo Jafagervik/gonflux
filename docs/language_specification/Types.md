@@ -9,6 +9,7 @@
 - str               "A"
 - bool              true | false 
 - option            i32|e1
+- enum
 - struct            
 
 ## In the future: 
