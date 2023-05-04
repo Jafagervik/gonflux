@@ -14,9 +14,30 @@
 ### program : TODO 
 
 
-### function ::= TODO 
+## ======================
+##   FUNCTIONS 
+## ======================
 
-### lambda ::= BACKSLASH function_params MINUSARROW expression KEYWORD_end
+### function ::= function_return | function_no_return
+ 
+### function_no_return ::= KEYWORD_proc function_commons KEYWORD_end
+
+### function_return ::= KEYWORD_fn function_commons KEYWORD_return expr KEYWORD_end
+
+### lambda ::= BACKSLASH function_params MINUSARROW expr KEYWORD_end
+
+### function_commons ::= identifier fnargs COLON datatype MINUSARROW exprlist 
+
+### fnargs ::= LEFTPAREN {function_params} RIGHTPAREN 
+
+### function_params ::= variable_definition {COMMA variable_definition}
+
+
+## ===========================
+##   Expressions
+## ===========================
+
+### accepted_list_types ::= integer | float | string | char | bool | option
 
 ### identifier ::= char {char_with_number}
 
@@ -42,6 +63,18 @@
 
 ### struct ::= KEYWORD_struct identifier MINUSARROW function_params KEYWORD_end
 
+### list ::= LEFTCURLYPAREN {accepted_list_types} RIGHTCURLYPAREN
+
+
+
+## ================ 
+##   If expression 
+## ================
+
+## TODO: Rewrite this in proper EBNF form
+### if_stmt ::= KEYWORD_if LEFTPAREN expr RIGHTPAREN KEYWORD_then exprlist END 
+### elseif_stmt ::= KEYWORD_elseif LEFTPAREN expr RIGHTPAREN KEYWORD_then exprlist END 
+### else_stmt ::= KEYWORD_else KEYWORD_then exprlist end 
 
 ## ============
 ## MATCH 
@@ -57,6 +90,10 @@
 
 ### head_tail_pattern :: identifier {COLONCOLON identifier}
 
+## ===================
+## Ranges  
+## =================== 
+
 ### rangelists ::= rangelist | rangelist_no_start | rangelist_no_end
 
 ### rangelist ::= integer DOTDOT integer 
@@ -66,9 +103,6 @@
 ## NOTE: For now, enum will be an algebraic datatype
 ### enum ::= KEYWORD_enum identifier MINUSARROW function_params KEYWORD_end
 
-### fnargs ::= LEFTPAREN function_params RIGHTPAREN 
-
-### function_params ::= variable_definition {COMMA variable_definition}
 
 ### variable_definition ::= identifier COLON datatype
 
@@ -79,9 +113,11 @@
 ### datatype ::= i32 | u32 | str | f32 | bool | char | TODO: add more 
 
 
-## ==============
-## Expressions 
-## ==============
+## =============
+##  Misc 
+## =============
+
+### import: KEYWORD_import AT indentifier
 
 ## ========================
 ##  Operator List 
@@ -133,6 +169,7 @@
 ### LEFTRIGHTCURLYPAREN :== '[]'
 ### COLONCOLON ::== '::'
 ### UNDERSCORE ::= '_'
+### AT ::= '@'
 
 ## ====================
 ##  KEYWORDS 
