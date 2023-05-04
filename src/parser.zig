@@ -1,19 +1,32 @@
 const std = @import("std");
 
-// TODO: Change the name of this one
-const parseerr = @import("errors.zig").ParseErrors;
-const lexer = @import("lexer.zig");
+const ParseError = @import("errors.zig").ParseError;
+const Token = @import("lexer.zig").Token;
 const AST = @import("ast.zig").AST;
 
-/// Parse into AST
-pub const Parser = struct {
-    const root = @This();
+// Import of all subparsers
+const Parsers = struct {
+    const ExprParser = @import("./parser/decimals.zig");
+};
 
-    pub fn parse(tokens: []lexer.Token) anyerror!AST {
-        for (tokens) |t| {
+/// This struct represents the parser
+pub const Parser = struct {
+    const Self = @This();
+
+    /// Parses
+    ///
+    /// tokens: []const Token, lists
+    ///
+    /// return, Pointer to an AST or error
+    pub fn parse(tokens: []const Token) ParseError!?*AST {
+        const ast: *AST = AST.init();
+
+        for (tokens) |*t| {
             switch (t) {
-                lexer.Token => undefined,
+                Token.Lparen => undefined,
             }
         }
+
+        return ast;
     }
 };

@@ -4,33 +4,28 @@ const std = @import("std");
 /// space, new_line or tab
 ///
 /// See doc for what is counted as space
-pub fn is_space(c: u8) bool {
+pub fn isSpace(c: u8) bool {
     return std.ascii.isWhitespace(c);
 }
 
 /// Read file from input line to parse and read from
-/// In the start we want to be able to run basic files
-/// But sooner rather than later we want to transform
-/// this into a proper build system ZIG can fully take advantage of
-fn read_file(filepath: []const u8) void {
-    const stdout = std.io.getStdOut();
-    const file: std.fs.File = try std.fs.Dir.openFile(
-        filepath,
-        .{ .read = true },
-    );
+///
+/// filepath: path to entry point
+/// allocator: which allocator to use
+/// bufsize: Size of buffer to store data in
+pub fn readFile(filepath: []const u8, allocator: std.mem.Allocator, bufsize: usize) ![]u8 {
+    // Get the path
+    var path_buffer: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+    const path = try std.fs.realpath(filepath, &path_buffer);
+
+    // Open the file
+    const file = try std.fs.openFileAbsolute(path, .{ .read = true });
+
+    // This has to be moved potentially
     defer file.close();
 
-    const reader: std.io.Reader = file.reader();
-
-    // TODO: Buffer need to be larger since we don`t know the
-    // sizes we're working with
-    var buffer: [5000]u8 = undefined;
-
-    while (reader.readUntilDelimiterOrEof(buffer[0..], '\n')) |line| {
-        try stdout.print("Line: {}\n", .{line});
-    } else |err| {
-        try stdout.print("Error: {}\n", .{err});
-    }
+    // Read the contents
+    return try file.readToEndAlloc(allocator, bufsize);
 }
 
 /// Subcommands for help menu
@@ -38,7 +33,7 @@ const SubCommand = enum { run, help };
 
 /// Print help if any of the noobs should have any issues with parsing
 /// SubCommand tells us what mode the user is in at that exact moment
-fn print_help(subcommand: SubCommand) !void {
+fn printHelp(subcommand: SubCommand) !void {
     const stdout = std.io.getStdOut();
 
     switch (subcommand) {

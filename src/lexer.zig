@@ -2,10 +2,9 @@ const std = @import("std");
 
 const TokenType = @import("types.zig").TokenType;
 
-const is_space = @import("helpers.zig").is_space;
+const isSpace = @import("helpers.zig").isSpace;
 
-/// TODO: Improve
-const lexererr = @import("errors").LexerErrors;
+const LexerError = @import("errors.zig").LexerError;
 
 /// Symbol used for single line comments
 pub const COMMENT_SYMBOL = '#';
@@ -25,25 +24,21 @@ pub const COMMENT_SYMBOL = '#';
 //   };
 //}
 
-/// TODO: Find out which of these 2 methods are more idiomatic
+// TODO: Find out which of these 2 methods are more idiomatic
+/// Represents a tokens position in the file
 pub const Location = struct {
     const Self = @This();
 
-    /// fp
-    file_path: []const u8 = undefined,
+    file_descriptor: []const u8 = undefined,
 
     row: usize = 0,
 
     col: usize = 0,
 
-    pub fn init(self: *Self, fp: []const u8, r: usize, c: usize) Self {
-        self.file_path = fp;
-        self.row = r;
-        self.col = c;
-        return self;
+    pub fn init(fd: []const u8, r: usize, c: usize) Location {
+        return Location{ .file_dscriptor = fd, .row = r, .col = c };
     }
 
-    /// TODO: Write this out to stdout in the future
     pub fn display(self: *Self) void {
         std.debug.log("{s} {d} {d}\n", .{ self.file_path, self.row, self.col });
     }
@@ -51,23 +46,18 @@ pub const Location = struct {
 
 /// Representation of a token in this magnificent language
 pub const Token = struct {
-    const Self = @This();
-
     /// Token type
     type: TokenType,
 
     /// Value of token
     value: []const u8,
 
-    ///  Location
+    /// Location of token in file
     location: Location,
 
-    /// Defult Token impl
-    pub fn init(self: *Self, loc: Location, t: TokenType, val: []const u8) Self {
-        self.location = loc;
-        self.type = t;
-        self.value = val;
-        return self;
+    /// Initializes a new Token
+    pub fn init(loc: Location, t: TokenType, val: []const u8) Token {
+        return Token{ .location = loc, .type = t, .value = val };
     }
 };
 
@@ -82,7 +72,6 @@ pub const Lexer = struct {
     /// Source data to read in from
     source: []const u8 = undefined,
 
-    // TODO: should this be location instead
     /// Current position in data, also called cursor
     cur: usize = 0,
 
@@ -92,18 +81,25 @@ pub const Lexer = struct {
     /// Row
     row: usize = 0,
 
-    pub fn tokenize(self: *Self, file: []const u8) anyerror![]const Token {
-        self.source = file;
+    /// Tokenizes a .gflx source file
+    ///
+    /// payload: []const u8, input file
+    ///
+    /// returns, List of tokens or a LexerError
+    pub fn tokenize(self: *Self, payload: []const u8) LexerError![]const Token {
+        self.source = payload;
+
+        const token_buffer_size: usize = std.math.maxInt(usize);
 
         var source_size: usize = self.source.len;
-        std.debug.print("Size is {}", .{source_size});
+        std.debug.print("Size of file is {}", .{source_size});
 
-        var buffer: [2048]u8 = undefined;
+        // Buffer for the array list containing the tokens
+        var buffer: [token_buffer_size]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(&buffer);
         const allocator = fba.allocator();
 
         var token_list = std.ArrayList(Token).init(allocator);
-        // TODO: Remove if needed
         defer token_list.deinit();
 
         // TODO: Implement main loop of tokenizer
@@ -114,6 +110,12 @@ pub const Lexer = struct {
             std.debug.print("Token", .{token});
         }
 
+        // Example of how to create an error
+        if (2 == 3) {
+            std.debug.panic("Oops, wrong!\n");
+            return LexerError.UnknownTokenError;
+        }
+
         // Return a list over the tokens we want to interact with
         return token_list.items;
     }
@@ -122,17 +124,17 @@ pub const Lexer = struct {
     //   INTERNALS
     // ==========================
 
-    // TODO: Engineer this a bit better
     /// Get the next token in this file
-    /// False means end of token
-    fn next_token(self: *Self) bool {
+    ///
+    /// return, token or a lexer error
+    fn getNextToken(self: *Self) LexerError!Token {
         // Trim indentation
-        self.trim_left();
+        self.trimLeft();
 
         // Ignore comments
-        while (self.is_not_empty() and self.source[self.pos] == COMMENT_SYMBOL) {
-            self.drop_line();
-            self.trim_left();
+        while (self.isNotEmpty() and self.source[self.pos] == COMMENT_SYMBOL) {
+            self.dropLine();
+            self.trimLeft();
         }
 
         var token = Token{};
@@ -147,8 +149,8 @@ pub const Lexer = struct {
         if (std.ascii.isAlphanumeric(self.source)) {
             var idx = self.pos;
 
-            while (self.is_not_empty() and std.ascii.isAlphanumeric(self.source(self.pos))) {
-                self.chop_char();
+            while (self.isNotEmpty() and std.ascii.isAlphanumeric(self.source(self.pos))) {
+                self.chopChar();
             }
 
             // First tokenizer
@@ -157,31 +159,26 @@ pub const Lexer = struct {
     }
 
     /// Check that cursor is not totally out
-    fn is_not_empty(self: *Self) bool {
+    fn isNotEmpty(self: *Self) bool {
         return self.pos < self.source.len;
     }
 
-    /// Check if this is empty
-    fn is_empty(self: *Self) bool {
-        return !self.is_not_empty();
-    }
-
     // TODO: Implement
-    fn trim_left(self: *Self) void {
+    fn trimLeft(self: *Self) void {
         _ = self;
-        //while (self.is_not_empty() and is_space(self.source[self.pos])) {
-        //    self.chop_char();
+        //while (self.isNotEmpty() and isSpace(self.source[self.pos])) {
+        //    self.chopChar();
         //}
     }
 
     /// "Chops" off characters
-    fn chop_char(self: *Self) void {
-        if (self.is_not_empty()) {
+    fn chopChar(self: *Self) void {
+        if (self.isNotEmpty()) {
             var x = self.source[self.pos];
             self.pos += 1;
 
             // We are now at the next line
-            if (x == '\n') {
+            if (std.ascii.isWhitespace(x)) {
                 self.bol = self.pos;
                 self.row += 1;
             }
@@ -194,15 +191,20 @@ test "docs" {
 }
 
 test "lexing" {
-    const fp = "./test_lex.gflx";
+    const data: []const u8 =
+        \\proc main() ->
+        \\    a: i32 = 1 + 2
+        \\    b: i32 = a * 4
+        \\    name = "Hello!"
+        \\    print(name)
+        \\end
+        \\
+        \\main()
+    ;
 
-    const lexer = Lexer.tokenize(fp);
-    _ = lexer;
-
-    std.testing.expect(2 + 2 == 4);
-    // std.testing.expect(lexer[0] == token1);
-    // std.testing.expect(lexer[0] == token2);
-    // std.testing.expect(lexer[0] == token3);
-    // std.testing.expect(lexer[0] == token4);
-
+    const lexer = Lexer.tokenize(data);
+    std.testing.expect(lexer[0] == Token.Procedure);
+    std.testing.expect(lexer[0] == Token.Identifier);
+    std.testing.expect(lexer[0] == Token.LParen);
+    std.testing.expect(lexer[0] == Token.RParen);
 }

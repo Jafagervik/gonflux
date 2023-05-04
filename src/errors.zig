@@ -1,7 +1,7 @@
 //! Common errors while parsing
 
 ///A bit more specific handling of what kinds of errors could happen when tal
-pub const LexerErrors = error{ GenericError, UnknowTokenError, OtherError };
+pub const LexerError = error{ GenericError, UnknowTokenError, OtherError };
 
 /// A bit more specific handling of what kinds of errors could happen when tal
 pub const ParseError = error{ GenericError, OtherError };
@@ -11,7 +11,7 @@ pub const InterpreterError = error{ GenericError, OtherError };
 
 /// General
 pub const GonFLUXError = error{
-    LexerErrors,
+    LexerError,
     ParseError,
     InterpreterError,
 };
