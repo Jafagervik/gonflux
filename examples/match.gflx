@@ -1,0 +1,17 @@
+@import std
+
+fn add(x: f32) : f32 ->
+    ret x + 42.0
+end
+
+
+proc main() ->
+    num: f32 = 43.2;
+
+    match (add(num)) ->
+        55.2 => print("Hurray\n"),
+        _ => print("Oops\n")
+    end
+
+    print("Goodbye!\n")
+end
