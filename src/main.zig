@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const L = @import("lexer.zig");
-const Parser = @import("parser.zig");
+const Parser = @import("parser.zig").Parser;
 const AST = @import("ast.zig").AST;
 const helpers = @import("helpers.zig");
 const args = @import("args.zig");
