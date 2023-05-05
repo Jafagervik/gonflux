@@ -1,0 +1,80 @@
+@import "std"
+@import "cuda"
+@import "matrix"
+
+// This type is defined inside matrix
+type Matrix = [][]i32
+
+// This enum is inside cuda 
+enum CUDA_RESULTS ->
+    CUDA_SUCCESS,
+    CUDA_ERRORS
+end
+
+// enum used inside another enum
+enum CUDA_ERRORS ->
+    CUDA_ERR_KERNEL,
+    CUDA_MEM_FAULT,
+    ...
+end
+
+// This function was imported from the matrix std library
+proc print_matrix(mat: Matrix, ys: u8, xs: u8) ->
+    a: (u8, u8, u8, u8) = proc inner(x: u8, y: u8, xs: u8, ys: u8) ->
+
+        if (y == ys and x == xs) then 
+            return
+        elseif (x == xs) then 
+            print("\n")
+            inner(0, y+1, xs, ys)
+        else then 
+            print("{} ", {mat[y][x]})
+            inner(x+1, y+1, xs, ys)
+        end
+    end
+
+    a(0, 0, xs, ys)
+end
+
+// Just an example of how to write your own kernel
+fn gemm_kernel(A: Matrix, B: Matrix, C: Matrix, N: i32) : cuda -> 
+
+    r: i32 = blockIdx.y * blockDim.y + threadIdx.y
+    c: i32 = blockIdx.x * blockDim.x + threadIdx.x
+
+ 
+    return CUDA_SUCCESS
+end 
+
+
+proc main() -> 
+    N: i32 = 1 << 10
+
+    A: Matrix = mCreateOnes(N, N)
+    B: Matrix = mCreateRand(N, N, 1, 10)
+    C: Matrix = mDefault(N, N)
+
+    // Another example of how create lists 
+    threadsPerBlock: [2]i32 = N :: N
+    blocksPerGrid: [2]i32  = N :: N 
+
+    D_A: CudaMatrix = mCreateDeviceMat(A, N, N)
+    D_B: CudaMatrix = mCreateDeviceMat(B, N, N)
+    D_C: CudaMatrix = mCreateDeviceMat(C, N, N)
+
+    // Example parameters 
+
+    start: u64 = get_time_instance()
+
+    result: Matric = cuGEMM(D_C, D_A, D_B, N, N, ... more fields)
+    
+    end: u64 = get_time_instance()
+
+    cuDeviceSync()
+
+    seconds: f32 = milisecondsToSeconds(end - start)
+
+    print("Cuda GEMM took only {}s\n", {seconds})
+
+    print_matrix(result, N, N)
+end

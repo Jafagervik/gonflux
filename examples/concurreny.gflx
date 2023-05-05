@@ -1,25 +1,11 @@
-import @std
-import @concurrency
-import @threads
-
-/*
-
-This 
-is
-a 
-multiline 
-comment
-in
-GonFLUX
-
-*/
-
+@import "std"
+@import "concurrency"
 
 fun do_op() : str -> 
     x = "Hello"
 
     // String concatination
-    return x ++ " World\n" 
+    return x ++ " World\n"
 end
 
 
@@ -28,16 +14,22 @@ proc main() ->
     b = spawn(do_op)
     c = spawn(do_op)
 
-    d = spawn(\x y -> x + y)
+    // d returns a pid, but won't return 
+    // until it has been called with params 
+    d = spawn(\x:i32, y: i32 -> x + y)
 
     // Potentially add a waitforall 
-    waitfor(a, b, c, d)
+    waitfor(a, b, c, d(2,3))
 
-    print(a)
-    print(b)
-    print(c)
-    print(d)
+    // send(to, opts)
+    // recv(from, opts)
+
+    // Add atomics later on?
+
+    print("{}, PID: {}\n", {a, pid(a)})
+    print("{}, PID: {}\n", {b, pid(b)})
+    print("{}, PID: {}\n", {c, pid(c)})
+    print("{}, PID: {}\n", {d, pid(d)})
 end
-
 
 main()

@@ -1,0 +1,34 @@
+@import "std"
+@import "atomic"
+
+@import "./intro.gflx"
+
+enum Member -> 
+    STUDENT,
+    ASSISTANT
+    PROFESSOR,
+end
+
+
+struct WasedaMember ->
+    
+    
+
+
+end
+
+// This function outputs whatever it needs to
+fn addition() :i32 ->
+
+
+end
+
+
+// Procs are functions without return values (return void)
+proc main() -> 
+
+    
+
+    print("Result here is", {})
+
+end

@@ -11,6 +11,8 @@
 - option            i32|e1
 - enum
 - struct            
+- sets              () must have different values
+// NOTE: Sets will only work for numbers, strings and char at the start?
 
 ## In the future: 
 
