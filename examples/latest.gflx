@@ -1,0 +1,184 @@
+@import "std"
+alias Vector = std.vector.Vector
+alias Time = std.time.Time 
+alias PI = std.math.constants.PI // std.constants.PI 
+
+a: compile i32 = 32;
+
+struct S ->
+    size: i32 
+
+
+    fn init(s: i32) : Self ->
+        return S { size: s }
+    end
+end
+
+
+// Typenames 
+
+
+struct S[T] ->
+    value: T
+
+    // Or maybe use something else instead
+    fn @print -> print("Value is {}", {value}) end
+end
+
+enum b -> 
+    Hello = 2,
+    Bye
+end
+
+
+// I would like to destructure sets, ranges, vectors?? and possibly matrices
+fn function() : i32 ->
+
+    mut a: i32 = 0
+
+    mut c: Range[i32] = 0..5
+
+    d: [i32] = match c -> 
+        h :: t => List(t)
+        h :: _ => [h]
+        []     => List.new(0..=10)
+
+    end 
+end
+
+
+fn voidfunc() ->
+    mut a: i32 = 4
+
+    c: Pointer[mut i32] = &a
+
+    *c = 5
+
+    if c == 4 and A then 
+        println("Hurray")
+    else then 
+        println("Boohoo")
+    end
+
+end 
+
+
+fn vector() : Vector[f32] ->
+    mut a: Vector[i32] = Vector.init(1..=10)
+
+    a.push(11)
+    
+    @assert(a == Vector.init(1..=11))
+
+    return a
+
+end
+
+
+fn set() : Set<i32> ->
+    
+    // Will remove duplicates
+    mut a: Set[i32] = Set.new([1,2,3,4,4])
+
+    a.add(4)
+
+    @assert(a == {Set.new([1,2,3,4])})
+
+    return a 
+end 
+
+
+fn Matrix() : Matrix[i32] ->
+    
+    // Potentially specify type inside 
+
+    m: Matrix[i32] = Matrix.new(3, 3, 0.0)
+    rows: usize = m.rows
+
+
+
+end 
+
+
+
+// not, and, or, if, then, else, while, for, return, 
+// @test, @unimlemented
+// Bits: !, ~, ^, &
+// <, <=, ==, >=, !=
+
+
+// 3 x 3 x 3 tensor 
+fn tensor() : Tensor[(3,3,3)] -> 
+    
+    
+    @todo("Soon")
+    @unimplemented
+end
+
+
+fn loops() ->
+
+    mut a = 0
+
+    while a < 10 |a += 1| then 
+        println("a is {}", {a})
+    end
+
+    a = 0
+
+    lst: [i32] = [1..=20]
+
+    for |i, elem| in lst then 
+        print("{}: {}", {i, elem})
+    end
+
+    for elem in list then 
+        print("{}: {}", {i, elem})
+    end
+
+    for i in 0..10 then 
+        print("{}", {i})
+    end
+
+end
+
+
+// Function currying
+// Fn(i32)
+
+fn main() ->
+    mut a: i32 = 0;
+
+    // Type inference
+    a = 2;
+
+
+    b: compile f32 = PI 
+
+    println("", {})
+
+end 
+
+
+fn createLambda(u: i32, v: i32) : Fn(i32, i32) -> 
+
+    aux = \x: i32 -> x ** 2
+    
+    a: Fn(i32, i32) = \x: i32 -> aux(u) + aux(v) end
+
+    return a
+
+end
+
+
+@test "Hello" ->
+    mut a: usize = 68420
+
+
+
+    a: i32, b: i32 = 42, 23
+
+    a += 1
+
+    @assert(a == b + 20)
+end

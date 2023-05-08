@@ -3,7 +3,7 @@ import @std
 
 // Return a function which creates a lambda 
 fn create_lambda() : Fn(i32, i32) ->
-    return \x: i32,  y: i32 -> x + y 
+    return \x: i32,  y: i32 -> x + yend
 end
 
 proc main() ->
@@ -13,6 +13,7 @@ proc main() ->
     y: i32 = 5
 
     result = lambda_function(x, y)
+
 
     print("Example of how lambdas can be created: {}\n", result)
 end

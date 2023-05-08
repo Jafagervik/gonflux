@@ -52,7 +52,7 @@ pub const Token = struct {
     /// Value of token
     value: []const u8,
 
-    /// Location of token in file
+    /// Location
     location: Location,
 
     /// Initializes a new Token

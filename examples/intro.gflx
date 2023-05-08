@@ -1,4 +1,17 @@
-import @std
+@import "std"
+
+fn addUntilBIs10(a: i32, b: i32) : i32 ->
+
+    fn aux(a: i32, b: i32, res: i32) : i32 -> 
+        if b < 10 then 
+            return addUntilBIs10(a, b+1, a + b)
+        else then 
+            return res 
+        end
+    end
+
+    return aux(a, b, res)
+end
 
 proc main() -> 
     print("Hello GonFLUX!\n", {});
@@ -8,4 +21,16 @@ proc main() ->
     inp: str = input("Input your name: \n")
 
     print("{} my name is {}\n", {"Hello", inp})
+
+    a: i32 = 5
+    b: i32 = 5
+
+    result: i32 = addUntilBIs10(a, b)
+
+    // println automatically adds new line beneath
+    println("Result is {result}")
+
+    
 end
+
+

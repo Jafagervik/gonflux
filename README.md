@@ -1,4 +1,4 @@
-# GonFLUX - A statically typed functional Language written in ZIG
+# GonFLUX - A statically typed multi paradigm Language written in ZIG
 ===============================================================
 
 <img src="https://preview.redd.it/ewvjkm3x1po21.png?auto=webp&s=0053b570aa3033800de5a50b20c7d348b9ff807f" alt="logo" width="300">
@@ -7,10 +7,10 @@
 
 Generally, programming language with support for concurrency and parallelism
 is not so trivial to understand. Rust, C, C++ are all great and powerful languages,
-but writing solid functional code is not so easy.
+but writing solid parallizable and concurrent code is not so easy.
 
-Functional languages are inherently stateless, which makes for a great choice 
-when working with communication between threads and processes. 
+Despite not being purely functional, as little code as possible should 
+
 
 Languages such as Elixir, Scala, Oz and Haskell all have support for concurrency,
 but the goal of GonFLUX is to create syntax more similar to python or julia, 
@@ -32,7 +32,7 @@ we can see how development of languages is from a developers experience.
 
 ## Main aspects of this language
 
-- Functional
+- Multiparadigm
 - Statically typed 
 - Easy-to-learn syntax
 - Built in support for concurrency and parallelism
