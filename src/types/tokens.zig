@@ -9,8 +9,9 @@ pub const TokenType = enum(u8) {
     AssignmentToken,
 };
 
+/// Literaltokens
 pub const LiteralToken = enum(u8) {
-    U8, // is u8
+    U8,
     U16,
     U32,
     U64,
@@ -20,19 +21,20 @@ pub const LiteralToken = enum(u8) {
     I32,
     I64,
     I128,
-    F8,
+    F8, // TODO: is it really needed?
     F16,
     F32,
     F64,
     F128,
     STRING,
     CHAR,
-    IDENTIFIER,
+    IDENTIFIER, // name of function or variable
     BOOL,
 };
 
 pub const AssignmentToken = enum(u8) {
     ARROW, // -> For starting the block
+
     EQUAL,
     PLUSEQUAL,
     MINUSEQUAL,
@@ -46,7 +48,6 @@ pub const AssignmentToken = enum(u8) {
     ASSIGNMENTEND, // Possibly nothing, since we don't allow this currently
     // Now for the list destructuring
     CONCATEQUAL, // ++=
-    LISTDESTRUCTURE,
 
     // Brackets
     PARENTOPEN,
@@ -59,14 +60,20 @@ pub const AssignmentToken = enum(u8) {
     END, // End is both a keyword and a assignment for somethings
 };
 
+/// Tokens I dont where to place
 pub const SpecialToken = enum(u8) {
     COLONCOLON, //   h :: t
     EQUALARROW, //   h => ...
     DOTDOT, // .. range
     DOTDOTEQUAL, // ..= inclusive range
+    PLUSPLUS, // list and string concat
     NEWLINE, // \n
     EOF,
     UNKNOWN,
+    COLON, // for return values
+    COMMA,
+    ATSIGN, // @ for builtins? hashtags??
+    UNDERSCORE, // _ for patternmatching
 };
 
 /// Operator Tokens
