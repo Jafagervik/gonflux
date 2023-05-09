@@ -1,7 +1,6 @@
-//! Common errors while parsing
-
+/// Common errors while parsing
 ///A bit more specific handling of what kinds of errors could happen when tal
-pub const LexerError = error{ GenericError, UnknowTokenError, OtherError };
+pub const LexerError = error{ GenericError, UnknowToken, UnrecognizableCharacter, OtherError };
 
 /// A bit more specific handling of what kinds of errors could happen when tal
 pub const ParseError = error{ GenericError, OtherError };

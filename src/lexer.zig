@@ -1,5 +1,4 @@
 const std = @import("std");
-const ArrayList = std.ArrayList;
 
 const TokenType = @import("types.zig").TokenType;
 const Constants = @import("constants.zig");
@@ -51,8 +50,8 @@ pub const Token = struct {
     nextToken: ?*Token = null,
 
     /// Initializes a new Token
-    pub fn init(loc: Location, t: TokenType, value: []const u8) Token {
-        return Token{ .location = loc, .tokenType = t, .lexeme = value };
+    pub fn init(tt: TokenType, loc: Location, value: []const u8) Token {
+        return Token{ .location = loc, .tokenType = tt, .lexeme = value };
     }
 
     /// Prints out the token
@@ -105,46 +104,207 @@ pub const Lexer = struct {
     /// we can use to parse for
     ///
     /// Returns: Pointer to token iterator or LexerError
-    pub fn tokenize(self: Self) LexerError!*Token {
-        // So we have something to look at
-        self.trimLeft();
+    pub fn tokenize(self: Self) (LexerError!anyerror)![]Token {
+        // Set up allocator
 
-        var start_of_lexeme = self.cursor;
+        var tokenList = std.ArrayList(Token).init(std.testing.allocator);
 
-        // FIND THE FIRST TOKEN AND GO FROM THERE
-        if (std.ascii.isAlphabetic(self.data[self.cursor])) {}
+        // Remove every space or newline at the beginning
+        self.trimStart();
 
-        while (!std.ascii.isWhitespace(self.data[self.cursor])) : (self.cursor += 1) {}
+        // While we're not at the end of the file and can get a character
+        while (self.peek()) : (self.cursor += 1) {
 
-        var lexeme_slice: [_]u8 = self.data[start_of_lexeme..self.cursor];
+            // Move until we actually get what we want
+            self.chopSpace();
 
-        // Handle first token
-        var rootToken: *Token = &Token.init();
+            var c = self.data[self.cursor];
 
-        for (self.data, 0..) |symbol, idx| {
-            self.cursor = idx;
+            // We are now looking at first token in a lexeme
+            switch (c) {
+                // Single line comment
+                '/' and self.peek() == '/' => {
+                    self.chopUntilNextLine();
+                },
+
+                // If we get to a new line, we should update BOL and cursor
+                '\n' => {
+                    self.row += 1;
+                    self.cursor += 1;
+                    self.beginning_of_line = self.cursor;
+                },
+
+                // BRACKETS
+                '[' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "[")),
+                ']' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "]")),
+                '(' => try tokenList.push(self.initToken(TokenType.OperatorToken.PARENOPEN, "(")),
+                ')' => try tokenList.push(self.initToken(TokenType.OperatorToken.PARENCLOSE, ")")),
+                '{' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACKOPEN, "{")),
+                '}' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACKOPEN, "}")),
+                // OPERATORS or ASSIGNMENTS
+
+                '+' => {
+                    switch (self.peek()) {
+                        '+' => try tokenList.push(self.initToken(TokenType.SpecialToken.PLUSPLUS, "++")),
+                        '=' => try tokenList.push(self.initToken(TokenType.AssignmentToken, "+=")),
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.PLUS, "+")),
+                    }
+                },
+
+                '-' => {
+                    switch (self.peek()) {
+                        '=' => try tokenList.push(self.initToken(TokenType.AssignmentToken, "-=")),
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.PLUS, "-")),
+                    }
+                },
+
+                // Digit
+                std.ascii.isDigit(c) => {},
+
+                // Letter
+                std.ascii.isAlphabetic(c) => {
+                    const lexeme = self.getLexeme();
+                    const jump: usize = lexeme.len;
+
+                    self.cursor += jump;
+                },
+
+                // Escape chars
+
+                // We should not be able to reach here
+                _ => LexerError.UnrecognizableCharacter,
+            }
         }
 
-        // FIXME: Remove after testing has finished
-        var loc: Location = Location.init(payload, 42, 42);
-        var t: Token = Token.init(loc, TokenType.ARROW, "hello");
+        for (self.tokenList.items) |token| {
+            token.print();
+        }
 
-        rootToken = &t;
+        // ======= END OF LOOP ================
 
-        return rootToken;
+        // var loc: Location = Location.init(payload, 42, 42);
+        // var t: Token = Token.init(loc, TokenType.ARROW, "hello");
+
+        // TODO: Remember to free this after they have been used
+        return tokenList.toOwnedSlice();
+    }
+
+    /// Peeks one char ahead in the future
+    ///
+    /// returns either a char or null if not
+    fn peek(self: Self) u8 {
+        return self.data[self.cursor + 1];
+    }
+
+    // TODO: This is probably bad practise.
+    /// Peeks n ahead in the future and could return a string slice
+    fn peekN(self: Self, n: usize) ?[]u8 {
+        return self.data[self.cursor .. self.cursor + n] orelse null;
+    }
+
+    // TODO: Check if logic checks out here
+    /// Will look ahead and try to get the next string.
+    /// Will either return a slize, or a null i
+    fn getLexeme(self: Self) ?[]u8 {
+        var look_ahead: usize = 0;
+
+        while (self.data[self.cursor + look_ahead] and
+            !self.isSpace(self.data[self.cursor + look_ahead])) : (look_ahead += 1)
+        {}
+
+        return self.data[self.cursor .. self.cursor + look_ahead] orelse null;
+    }
+
+    /// Since we found a comment, skip until next line
+    fn chopUntilNextLine(self: Self) void {
+        while (self.data[self.cursor] != '\n') : (self.cursor += 1) {}
+
+        self.row += 1;
+        self.beginning_of_line = self.cursor;
     }
 
     /// Moves the cursor until we get to the next token
     fn chopSpace(self: Self) void {
-        while (helpers.isSpace(self.data[self.cursor])) : (self.cursor += 1) {}
+        while (self.data[self.cursor] == ' ') : (self.cursor += 1) {}
     }
 
-    /// Trims file until there actually is source code to look at
-    fn trimLeft(self: Self) void {
-        while (helpers.isSpace(self.data[self.cursor])) : (self.cursor += 1) {}
+    /// Clean up the start until we hit a character
+    fn trimStart(self: Self) void {
+        if (self.data[self.cursor] == ' ') {
+            self.cursor += 1;
+            self.trimStart();
+        } else if (self.data[self.cursor] == '\n') {
+            self.cursor += 1;
+            self.row += 1;
+            self.beginning_of_line = self.cursor;
+            self.trimStart();
+        } else {
+            return;
+        }
+    }
+
+    /// Helper function to init a token
+    /// initToken(TYPE, LEXEME)
+    /// lexeme should be a slice
+    fn initToken(self: Self, tt: TokenType, lexeme: []u8) Token {
+        // Col = cur - bol
+        var location = Location.init(self.file_path, self.row, self.cursor - self.beginning_of_line);
+        return Token.init(tt, location, lexeme);
+    }
+
+    // =====================
+    //   Helpers
+    // =====================
+
+    /// Check whether or not a given char is
+    /// space, new_line or tab
+    ///
+    /// See doc for what is counted as space
+    fn isSpace(c: u8) bool {
+        return std.ascii.isWhitespace(c);
+    }
+
+    /// Lexer helper
+    ///
+    /// Checks that a character is a sy
+    fn isSymbol(c: u8) bool {
+        return !std.ascii.isAlphanumeric(c) and !isEscapeCharacter(c);
+    }
+
+    /// Lexer helper
+    ///
+    /// Will check for escape character
+    fn isEscapeCharacter(c: u8) bool {
+        return c == '\n' or c == '\'' or c == '\"' or c == '\n' or c == '\r' or c == '\t' or c == '\\';
+    }
+
+    /// Check up valid datatypes
+    ///
+    /// A lot of early returns to easily discard value
+    fn isValidDatatype(s: []u8) bool {
+        const n = s.len;
+        if (n > 4 or n < 2) return false;
+
+        if (!(s[0] == 'u' or s[0] == 'i' or s[0] == 'f')) return false;
+
+        if (!(s[1] == '1' or s[1] == '3' or s[1] == '6' or s[1] == '8')) return false;
+
+        // We should not access this code if we're this far
+        if (n < 3) return false;
+
+        if (!(s[2] == '2' or s[1] == '4' or s[2] == '6')) return false;
+
+        if (n < 4) return false;
+
+        if (!s[3] == '8') return false;
+
+        return true;
     }
 };
 
+// =========================
+//     TESTS FOR LEXER
+// =========================
 test "docs" {
     std.testing.refAllDecls(Lexer);
 }
@@ -162,28 +322,28 @@ test "lexical analysis" {
     var iter = scanner.tokenize();
 
     var tok1 = try iter.next();
-    std.testing.expect(tok1.*.tokenType == TokenType.FnToken);
+    std.testing.expect(tok1.*.tokenType == TokenType.KeywordToken.FN);
 
     var tok2 = try iter.next();
-    std.testing.expect(tok2.*.tokenType == TokenType.MainIndetifierToken);
+    std.testing.expect(tok2.*.tokenType == TokenType.LiteralToken.IDENTIFIER);
 
     var tok3 = try iter.next();
-    std.testing.expect(tok3.*.tokenType == TokenType.LParenToken);
+    std.testing.expect(tok3.*.tokenType == TokenType.OperatorToken.PARENOPEN);
 
     var tok4 = try iter.next();
-    std.testing.expect(tok4.*.tokenType == TokenType.RParenToken);
+    std.testing.expect(tok4.*.tokenType == TokenType.OperatorToken.PARENCLOSE);
 
     var tok5 = try iter.next();
-    std.testing.expect(tok5.*.tokenType == TokenType.ColonToken);
+    std.testing.expect(tok5.*.tokenType == TokenType.SpecialToken.ARROW);
 
     var tok6 = try iter.next();
-    std.testing.expect(tok6.*.tokenType == TokenType.DataTypeToken);
+    std.testing.expect(tok6.*.tokenType == TokenType.LiteralToken.IDENTIFIER);
 
     var tok7 = try iter.next();
-    std.testing.expect(tok7.*.tokenType == TokenType.EqualsToken);
+    std.testing.expect(tok7.*.tokenType == TokenType.AssignmentToken.EQUAL);
 
     var tok8 = try iter.next();
-    std.testing.expect(tok8.*.tokenType == TokenType.ValueToken);
+    std.testing.expect(tok8.*.tokenType == TokenType.LiteralToken.I32);
 
     var tok9 = try iter.next();
     std.testing.expect(tok9.*.tokenType == TokenType.ReturnToken);
@@ -194,69 +354,3 @@ test "lexical analysis" {
     var tok11 = try iter.next();
     std.testing.expect(tok11.*.tokenType == TokenType.EndToken);
 }
-
-//
-// // ==========================
-// //   INTERNALS
-// // ==========================
-//
-// /// Get the next token in this file
-// ///
-// /// return, token or a lexer error
-// fn getNextToken(self: *Self) LexerError!Token {
-//     // Trim indentation
-//     self.trimLeft();
-//
-//     // Ignore comments
-//     while (self.isNotEmpty() and self.source[self.pos] == COMMENT_SYMBOL) {
-//         self.dropLine();
-//         self.trimLeft();
-//     }
-//
-//     var token = Token{};
-//     // TODO: not assigning correct type here
-//     token.location = self.cur;
-//
-//     if (self.empty()) return false;
-//
-//     var loc = self.cur;
-//
-//     // Get characters while they're alphanum
-//     if (std.ascii.isAlphanumeric(self.source)) {
-//         var idx = self.pos;
-//
-//         while (self.isNotEmpty() and std.ascii.isAlphanumeric(self.source(self.pos))) {
-//             self.chopChar();
-//         }
-//
-//         // First tokenizer
-//         return Token.init(loc, "TOKENNAME", self.source[idx..self.cursor]);
-//     }
-// }
-//
-// /// Check that cursor is not totally out
-// fn isNotEmpty(self: *Self) bool {
-//     return self.pos < self.source.len;
-// }
-//
-// // TODO: Implement
-// fn trimLeft(self: *Self) void {
-//     _ = self;
-//     //while (self.isNotEmpty() and isSpace(self.source[self.pos])) {
-//     //    self.chopChar();
-//     //}
-// }
-//
-// /// "Chops" off characters
-// fn chopChar(self: *Self) void {
-//     if (self.isNotEmpty()) {
-//         var x = self.source[self.pos];
-//         self.pos += 1;
-//
-//         // We are now at the next line
-//         if (std.ascii.isWhitespace(x)) {
-//             self.bol = self.pos;
-//             self.row += 1;
-//         }
-//     }
-// }
