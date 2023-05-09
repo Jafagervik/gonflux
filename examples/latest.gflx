@@ -18,7 +18,7 @@ end
 // Typenames 
 
 
-struct S[T] ->
+struct S[type T] ->
     value: T
 
     // Or maybe use something else instead

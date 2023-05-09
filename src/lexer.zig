@@ -8,7 +8,7 @@ const LexerError = @import("errors.zig").LexerError;
 const helpers = @import("helpers.zig");
 
 /// Token iterator type
-const TokenIterator = *[]Token;
+const TokenIterator = ?*Token;
 
 /// Represents a tokens position in the file
 pub const Location = struct {
@@ -47,14 +47,28 @@ pub const Token = struct {
     /// Location of the Token
     location: Location = undefined,
 
+    /// Following token
+    nextToken: ?*Token = null,
+
     /// Initializes a new Token
-    pub fn init(loc: Location, t: TokenType, val: []const u8) Token {
-        return Token{ .location = loc, .tokenType = t, .lexeme = val };
+    pub fn init(loc: Location, t: TokenType, value: []const u8) Token {
+        return Token{ .location = loc, .tokenType = t, .lexeme = value };
     }
 
     /// Prints out the token
     pub fn print(self: Self) void {
         std.debug.print("Type: {d}\tLexeme: {s}\tRow: {d}\t Col: {d}\n", .{ @enumToInt(self.tokenType), self.lexeme, self.location.row, self.location.col });
+    }
+
+    /// Gives us the next token as long as there exists one
+    ///
+    /// Returns a TokenIterator: *Token
+    pub fn next(self: *Self) TokenIterator {
+        if (self.nextToken) {
+            return self.next;
+        } else {
+            return null;
+        }
     }
 };
 
@@ -66,7 +80,7 @@ pub const Lexer = struct {
     file_path: []const u8 = undefined,
 
     /// Source data to read in from
-    data: []const u8 = undefined,
+    data: []u8 = undefined,
 
     /// Current index of file we're looking at, also called cursor
     cursor: usize = 0,
@@ -77,25 +91,47 @@ pub const Lexer = struct {
     /// Current row in file
     row: usize = 0,
 
+    // COL = CURSOR - BEGINNING OF LINE
+
     /// Initializes the lexer struct and prepares for tokenization
     ///
     /// file_path: str, absolute filepath to source file
     /// payload: char iterator, every char to read from
-    pub fn init(file_path: []const u8, payload: []const u8) Lexer {
-        return Lexer{
-            .file_path = file_path,
-            .data = payload,
-        };
+    pub fn init(file_path: []const u8, payload: []u8) Lexer {
+        return Lexer{ .file_path = file_path, .data = payload };
     }
 
     /// Tokenizes source file and returns an iterator
     /// we can use to parse for
     ///
-    /// Returns: Pointer to token array or LexerError
-    pub fn tokenize(self: Self) LexerError!*[]Token {
-        // TODO: Optimizations
-        _ = self;
-        return LexerError.GenericError;
+    /// Returns: Pointer to token iterator or LexerError
+    pub fn tokenize(self: Self) LexerError!*Token {
+        // So we have something to look at
+        self.trimLeft();
+
+        var start_of_lexeme = self.cursor;
+
+        // FIND THE FIRST TOKEN AND GO FROM THERE
+        if (std.ascii.isAlphabetic(self.data[self.cursor])) {}
+
+        while (!std.ascii.isWhitespace(self.data[self.cursor])) : (self.cursor += 1) {}
+
+        var lexeme_slice: [_]u8 = self.data[start_of_lexeme..self.cursor];
+
+        // Handle first token
+        var rootToken: *Token = &Token.init();
+
+        for (self.data, 0..) |symbol, idx| {
+            self.cursor = idx;
+        }
+
+        // FIXME: Remove after testing has finished
+        var loc: Location = Location.init(payload, 42, 42);
+        var t: Token = Token.init(loc, TokenType.ARROW, "hello");
+
+        rootToken = &t;
+
+        return rootToken;
     }
 
     /// Moves the cursor until we get to the next token
@@ -103,9 +139,10 @@ pub const Lexer = struct {
         while (helpers.isSpace(self.data[self.cursor])) : (self.cursor += 1) {}
     }
 
-    // Next will give us an iterator to use to access the next element
-    // for tokenization
-    // pub fn next(self: *Self) ?*Token{}
+    /// Trims file until there actually is source code to look at
+    fn trimLeft(self: Self) void {
+        while (helpers.isSpace(self.data[self.cursor])) : (self.cursor += 1) {}
+    }
 };
 
 test "docs" {
@@ -157,14 +194,6 @@ test "lexical analysis" {
     var tok11 = try iter.next();
     std.testing.expect(tok11.*.tokenType == TokenType.EndToken);
 }
-
-// var allocator = std.heap.page_allocator;
-//
-// var token_list = std.ArrayList(Token).init(allocator);
-// defer token_list.deinit();
-//
-// var loc: Location = Location.init(payload, 42, 42);
-// var t: Token = Token.init(loc, TokenType.ARROW, "hello");
 
 //
 // // ==========================

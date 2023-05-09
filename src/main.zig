@@ -1,8 +1,6 @@
 const std = @import("std");
 
-const Lexer = @import("lexer.zig");
-// const Parser = @import("parser.zig").Parser;
-// const AST = @import("ast.zig").AST;
+const lex = @import("lexer.zig");
 const helpers = @import("helpers.zig");
 const Constants = @import("constants.zig");
 
@@ -24,27 +22,24 @@ pub fn main() anyerror!void {
 
     // Open file
     const file = try std.fs.openFileAbsolute(path, .{});
+    defer file.close();
 
     // TODO: Find out if we're just gonna return a pointer to path instead
     const payload = try file.readToEndAlloc(allocator, BUFSIZE);
+    allocator.free(payload);
 
-    for (payload, 0..) |char, idx| {
+    // Lexical Analysis
+    var lexer: lex.Lexer = lex.Lexer.init(TESTFILE, payload);
+
+    for (lexer.data, 0..) |char, idx| {
         std.debug.print("{d:>2}: {c}\n", .{ idx, char });
     }
 
-    // Lexical Analysis
-    var lexer = Lexer.Lexer.init(TESTFILE, payload);
-    _ = lexer;
+    // TODO: If lex fails, report error and exit
+    // var token_iterator: TokenIter = try lexer.tokenize(payload);
 
-    // var token: *TokenIter = try lexer.tokenize(payload);
-
-    // var tokens = try lexer.tokenize(payload);
-    //
-    // while (tokens.next()) |*token| {
+    // while (token_iterator.next()) |*token| {
     //     token.print();
     // }
 
-    // TODO: Clean up resources as early as possible for the future
-    allocator.free(payload);
-    file.close();
 }

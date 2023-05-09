@@ -9,7 +9,7 @@ pub fn isSpace(c: u8) bool {
 }
 
 pub fn print(val: anytype) void {
-    std.debug.print("{}\n", .{val});
+    std.debug.print("{any}\n", .{val});
 }
 
 pub fn prints(val: anytype) void {
