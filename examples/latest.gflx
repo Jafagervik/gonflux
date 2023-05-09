@@ -75,7 +75,7 @@ fn vector() : Vector[f32] ->
 end
 
 
-fn set() : Set<i32> ->
+fn set() : Set[i32] ->
     
     // Will remove duplicates
     mut a: Set[i32] = Set.new([1,2,3,4,4])

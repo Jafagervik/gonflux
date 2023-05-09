@@ -1,4 +1,6 @@
-fn main () -> i32 =
-    ret 42 + 3
+fn main () : i32 ->
+    a: i32 = 42 
+
+    return a
 end
 

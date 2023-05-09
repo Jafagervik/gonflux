@@ -1,66 +1,50 @@
 const std = @import("std");
 
-const L = @import("lexer.zig");
-const Parser = @import("parser.zig").Parser;
-const AST = @import("ast.zig").AST;
+const Lexer = @import("lexer.zig");
+// const Parser = @import("parser.zig").Parser;
+// const AST = @import("ast.zig").AST;
 const helpers = @import("helpers.zig");
-const args = @import("args.zig");
+const Constants = @import("constants.zig");
 
-const NAME: []const u8 =
-    \\
-    \\   ============  =========== ==         ==         ==
-    \\   ============  =========== ==          ==       ==
-    \\   ==            ==          ==           ==     ==
-    \\   ==            ==          ==            ==   ==
-    \\   ==            =========== ==             == ==
-    \\   ============= =========== ==              == 
-    \\   ============= ==          ==            ==  ==
-    \\   ==         == ==          ==           ==    ===
-    \\   ==         == ==          ==========  ==       ==
-    \\   ============= ==          ========== ==         ==
-    \\
-;
-
-const TESTFILE: []const u8 = "./test.gflx";
+const TESTFILE: []const u8 = "./src/test.gflx";
 const BUFSIZE: usize = std.math.maxInt(usize);
 
-const RuntimeMode = enum { DEBUG, RELEASE };
-const mode = RuntimeMode.DEBUG;
+pub fn main() anyerror!void {
+    helpers.prints(Constants.GFLX);
 
-pub fn main() !void {
-    std.debug.info("{s}", .{NAME});
+    // _ = ArgsParser.parse();
 
-    // Parse arguments
-    args.parse();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
-    //  Get an allocator
-    var gp = std.heap.GeneralPurposeAllocator(.{ .safety = true }){};
-    defer _ = gp.deinit();
-    const allocator = &gp.allocator;
+    // Get the path
+    var path_buffer: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+    const path = try std.fs.realpath(TESTFILE, &path_buffer);
 
     // Open file
-    const payload = helpers.readFile(TESTFILE, BUFSIZE, allocator);
-    defer allocator.free(payload);
+    const file = try std.fs.openFileAbsolute(path, .{});
 
-    // Lexical Analysis
-    var lexer: L.Lexer = L.Lexer{};
+    // TODO: Find out if we're just gonna return a pointer to path instead
+    const payload = try file.readToEndAlloc(allocator, BUFSIZE);
 
-    // Tokenize the data
-    var token_list: std.ArrayList(L.Token) = try lexer.tokenize(payload);
-
-    if (mode.DEBUG == true) {
-        for (token_list) |tok| {
-            std.debug.print("Token Type: {} \t\t Value: {}\n", .{ tok.token, tok.value });
-        }
+    for (payload, 0..) |char, idx| {
+        std.debug.print("{d:>2}: {c}\n", .{ idx, char });
     }
 
-    // Parse the token list and construct the AST
-    const ast: *AST = Parser.parse(*token_list);
-    _ = ast;
+    // Lexical Analysis
+    var lexer = Lexer.Lexer.init(TESTFILE, payload);
+    _ = lexer;
 
-    // Compilation or potentially not
-}
+    // var token: *TokenIter = try lexer.tokenize(payload);
 
-test "Current Implementation" {
-    std.testing.expect(1 + 1 == 2);
+    // var tokens = try lexer.tokenize(payload);
+    //
+    // while (tokens.next()) |*token| {
+    //     token.print();
+    // }
+
+    // TODO: Clean up resources as early as possible for the future
+    allocator.free(payload);
+    file.close();
 }
