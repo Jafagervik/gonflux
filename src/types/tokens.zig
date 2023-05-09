@@ -35,6 +35,7 @@ pub const LiteralToken = enum(u8) {
 pub const AssignmentToken = enum(u8) {
     ARROW, // -> For starting the block
 
+    COLON, // for return values
     EQUAL,
     PLUSEQUAL,
     MINUSEQUAL,
@@ -70,7 +71,6 @@ pub const SpecialToken = enum(u8) {
     NEWLINE, // \n
     EOF,
     UNKNOWN,
-    COLON, // for return values
     COMMA,
     ATSIGN, // @ for builtins? hashtags??
     UNDERSCORE, // _ for patternmatching
@@ -80,7 +80,8 @@ pub const SpecialToken = enum(u8) {
 pub const OperatorToken = enum(u8) {
     PLUS, // Pluses an operation
     MINUS,
-    MULTIPLY,
+    ASTERISK, // multiply or dereferencing
+    ANDPERCEN, // reference?
     DIVIDE,
     MODULO,
     POW, // **, FIXME: Could be tricky with pointers
@@ -120,6 +121,7 @@ pub const KeywordToken = enum(u8) {
     IMPORT,
     EXPORT,
     PUBLIC,
+    TYPE,
     INLINE,
     TYPEOF,
     ENUM,

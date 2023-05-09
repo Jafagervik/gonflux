@@ -134,6 +134,16 @@ pub const Lexer = struct {
                     self.beginning_of_line = self.cursor;
                 },
 
+                // List concat
+                ':' => {
+                    if (self.peek() == ':') {
+                        try tokenList.push(self.initToken(TokenType.SpecialToken.COLONCOLON, "::"));
+                        self.cursor += 1;
+                        continue;
+                    }
+                    try tokenList.push(self.initToken(TokenType.AssignmentToken.COLON, ":"));
+                },
+
                 // BRACKETS
                 '[' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "[")),
                 ']' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "]")),
@@ -145,28 +155,90 @@ pub const Lexer = struct {
 
                 '+' => {
                     switch (self.peek()) {
-                        '+' => try tokenList.push(self.initToken(TokenType.SpecialToken.PLUSPLUS, "++")),
-                        '=' => try tokenList.push(self.initToken(TokenType.AssignmentToken, "+=")),
+                        '+' => {
+                            try tokenList.push(self.initToken(TokenType.SpecialToken.PLUSPLUS, "++"));
+                            self.cursor += 1;
+                        },
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken, "+="));
+                            self.cursor += 1;
+                        },
                         ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.PLUS, "+")),
                     }
                 },
 
                 '-' => {
                     switch (self.peek()) {
-                        '=' => try tokenList.push(self.initToken(TokenType.AssignmentToken, "-=")),
-                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.PLUS, "-")),
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken, "-="));
+                            self.cursor += 1;
+                        },
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.MINUS, "-")),
                     }
                 },
 
-                // Digit
-                std.ascii.isDigit(c) => {},
+                // TODO: Dereferencing when it comes to pointers need to be held in mind
+                '*' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken, "*="));
+                            self.cursor += 1;
+                        },
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.MULTIPLY, "*")),
+                    }
+                },
 
-                // Letter
-                std.ascii.isAlphabetic(c) => {
-                    const lexeme = self.getLexeme();
-                    const jump: usize = lexeme.len;
+                '/' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken, "/="));
+                            self.cursor += 1;
+                        },
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.DIVIDE, "/")),
+                    }
+                },
 
-                    self.cursor += jump;
+                // If they are none of the afformentioned, it has to be string or digit
+                c => {
+                    // Digit
+                    // NOTE: Here we have to be careful that we could both have integer and float
+                    if (std.ascii.isDigit(c)) {}
+
+                    // Letter
+                    if (std.ascii.isAlphabetic(c)) {
+                        const lexeme = self.getLexeme();
+                        const jump: usize = lexeme.len;
+
+                        // Check against keywords first
+                        // TODO: Optimize this pattern matching perhaps
+                        if (std.mem.eql(u8, lexeme, "fn")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "fn"));
+                        if (std.mem.eql(u8, lexeme, "end")) try tokenList.push(self.initToken(TokenType.KeywordToken.END, "end"));
+                        if (std.mem.eql(u8, lexeme, "null")) try tokenList.push(self.initToken(TokenType.KeywordToken.NULL, "null"));
+                        if (std.mem.eql(u8, lexeme, "if")) try tokenList.push(self.initToken(TokenType.KeywordToken.IF, "if"));
+                        if (std.mem.eql(u8, lexeme, "elseif")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "elseif"));
+                        if (std.mem.eql(u8, lexeme, "else")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "else"));
+                        if (std.mem.eql(u8, lexeme, "then")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "then"));
+                        if (std.mem.eql(u8, lexeme, "while")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "while"));
+                        if (std.mem.eql(u8, lexeme, "for")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "for"));
+                        if (std.mem.eql(u8, lexeme, "mut")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "mut"));
+                        if (std.mem.eql(u8, lexeme, "break")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "break"));
+                        if (std.mem.eql(u8, lexeme, "continue")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "continue"));
+                        if (std.mem.eql(u8, lexeme, "return")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "return"));
+                        if (std.mem.eql(u8, lexeme, "throw")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "throw"));
+                        if (std.mem.eql(u8, lexeme, "catch")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "catch"));
+                        if (std.mem.eql(u8, lexeme, "try")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "try"));
+                        if (std.mem.eql(u8, lexeme, "import")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "import"));
+                        if (std.mem.eql(u8, lexeme, "export")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "export"));
+                        if (std.mem.eql(u8, lexeme, "public")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "public"));
+                        if (std.mem.eql(u8, lexeme, "inline")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "inline"));
+                        if (std.mem.eql(u8, lexeme, "typeof")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "typeof"));
+                        if (std.mem.eql(u8, lexeme, "type")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "type"));
+                        if (std.mem.eql(u8, lexeme, "enum")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "enum"));
+                        if (std.mem.eql(u8, lexeme, "struct")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "struct"));
+                        if (std.mem.eql(u8, lexeme, "in")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "in"));
+
+                        self.cursor += jump;
+                    }
                 },
 
                 // Escape chars

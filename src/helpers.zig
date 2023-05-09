@@ -1,27 +1,5 @@
 const std = @import("std");
 
-/// Check whether or not a given char is
-/// space, new_line or tab
-///
-/// See doc for what is counted as space
-pub fn isSpace(c: u8) bool {
-    return std.ascii.isWhitespace(c);
-}
-
-/// Lexer helper
-///
-/// Checks that a character is a sy
-pub fn isSymbol(c: u8) bool {
-    return !std.ascii.isAlphanumeric(c) and !isEscapeCharacter(c);
-}
-
-/// Lexer helper
-///
-/// Will check for escape character
-pub fn isEscapeCharacter(c: u8) bool {
-    return c == '\n' or c == '\'' or c == '\"' or c == '\n' or c == '\r' or c == '\t' or c == '\\';
-}
-
 pub fn print(val: anytype) void {
     std.debug.print("{any}\n", .{val});
 }
