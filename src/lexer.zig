@@ -106,14 +106,17 @@ pub const Lexer = struct {
     /// Returns: Pointer to token iterator or LexerError
     pub fn tokenize(self: Self) (LexerError!anyerror)![]Token {
         // Set up allocator
+        var buffer: [5000]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(&buffer);
+        var allocator = &fba.allocator();
 
-        var tokenList = std.ArrayList(Token).init(std.testing.allocator);
+        var tokenList = std.ArrayList(Token).init(allocator);
 
         // Remove every space or newline at the beginning
         self.trimStart();
 
         // While we're not at the end of the file and can get a character
-        while (self.peek()) : (self.cursor += 1) {
+        while (!self.endOfFile()) : (self.cursor += 1) {
 
             // Move until we actually get what we want
             self.chopSpace();
@@ -127,28 +130,36 @@ pub const Lexer = struct {
                     self.chopUntilNextLine();
                 },
 
+                // TODO: Check if we need to add newline as a token
                 // If we get to a new line, we should update BOL and cursor
+                // Cursor gets updated in loop, so only upadte row and bol
                 '\n' => {
                     self.row += 1;
-                    self.cursor += 1;
-                    self.beginning_of_line = self.cursor;
+                    self.beginning_of_line = self.cursor + 1;
                 },
+
+                // Quotes for strings and characters
+                '\'' => try tokenList.push(self.initToken(TokenType.SpecialToken.QUOTE, "\'")),
+                '\"' => try tokenList.push(self.initToken(TokenType.SpecialToken.DOUBLEQUOTE, "\"")),
+
+                // Can both be used for pattern matching and as part of
+                '_' and self.peek() == ' ' => try tokenList.push(self.initToken(TokenType.AssignmentToken.UNDERSCORE, "_")),
 
                 // List concat
                 ':' => {
                     if (self.peek() == ':') {
                         try tokenList.push(self.initToken(TokenType.SpecialToken.COLONCOLON, "::"));
                         self.cursor += 1;
-                        continue;
+                    } else {
+                        try tokenList.push(self.initToken(TokenType.AssignmentToken.COLON, ":"));
                     }
-                    try tokenList.push(self.initToken(TokenType.AssignmentToken.COLON, ":"));
                 },
 
                 // BRACKETS
-                '[' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "[")),
-                ']' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "]")),
                 '(' => try tokenList.push(self.initToken(TokenType.OperatorToken.PARENOPEN, "(")),
                 ')' => try tokenList.push(self.initToken(TokenType.OperatorToken.PARENCLOSE, ")")),
+                '[' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "[")),
+                ']' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACEOPEN, "]")),
                 '{' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACKOPEN, "{")),
                 '}' => try tokenList.push(self.initToken(TokenType.OperatorToken.BRACKOPEN, "}")),
                 // OPERATORS or ASSIGNMENTS
@@ -164,6 +175,7 @@ pub const Lexer = struct {
                             self.cursor += 1;
                         },
                         ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.PLUS, "+")),
+                        _ => unreachable,
                     }
                 },
 
@@ -174,6 +186,7 @@ pub const Lexer = struct {
                             self.cursor += 1;
                         },
                         ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.MINUS, "-")),
+                        _ => unreachable,
                     }
                 },
 
@@ -185,6 +198,7 @@ pub const Lexer = struct {
                             self.cursor += 1;
                         },
                         ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.MULTIPLY, "*")),
+                        _ => unreachable,
                     }
                 },
 
@@ -195,50 +209,160 @@ pub const Lexer = struct {
                             self.cursor += 1;
                         },
                         ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.DIVIDE, "/")),
+                        _ => unreachable,
+                    }
+                },
+
+                // ======================
+                // BIT OPERATIONS
+                // ======================
+
+                // FIXME: This could also be a reference, but this is for the parser to decide
+                '&' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken.BITANDEQUAL, "&="));
+                            self.cursor += 1;
+                        },
+                        // Reference and logical and for bits
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.ANDPERCEN, "&")),
+                        _ => undefined,
+                    }
+                },
+
+                // Pipe can mean either a capture list or bit or
+                '|' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken.BITOREQUAL, "|="));
+                            self.cursor += 1;
+                        },
+                        // Reference and logical and for bits
+                        ' ' => try tokenList.push(self.initToken(TokenType.SpecialToken.PIPE, "|")),
+                    }
+                },
+
+                '^' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken.BITXOREQUAL, "^="));
+                            self.cursor += 1;
+                        },
+                        // Reference and logical and for bits
+                        ' ' => try tokenList.push(self.initToken(TokenType.SpecialToken.BITXOR, "^")),
+                    }
+                },
+
+                '~' => {
+                    switch (self.peek()) {
+                        '=' => {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken.BITNOTEQUAL, "~="));
+                            self.cursor += 1;
+                        },
+                        // Reference and logical and for bits
+                        ' ' => try tokenList.push(self.initToken(TokenType.OperatorToken.BITNOT, "~")),
                     }
                 },
 
                 // If they are none of the afformentioned, it has to be string or digit
                 c => {
+                    const lexeme = self.getLexeme();
+                    const jump: usize = lexeme.len;
+
+                    // Used as identifier
+                    if (c == '_' and std.ascii.isAlphanumeric(self.peek())) {
+                        // _Identfier
+                        try tokenList.push(self.initToken(TokenType.LiteralToken.IDENTIFIER, lexeme));
+                    }
                     // Digit
                     // NOTE: Here we have to be careful that we could both have integer and float
-                    if (std.ascii.isDigit(c)) {}
+                    else if (std.ascii.isDigit(c)) {
 
-                    // Letter
-                    if (std.ascii.isAlphabetic(c)) {
-                        const lexeme = self.getLexeme();
-                        const jump: usize = lexeme.len;
-
-                        // Check against keywords first
+                        // Float
+                        if (self.containsDot(lexeme)) {
+                            try tokenList.push(self.initToken(TokenType.LiteralToken.FLOAT, lexeme));
+                        } else {
+                            try tokenList.push(self.initToken(TokenType.LiteralToken.INTEGER, lexeme));
+                        }
+                    } else if (std.ascii.isAlphabetic(c)) {
+                        // ====================
+                        //  KEYWORDS
+                        // ====================
                         // TODO: Optimize this pattern matching perhaps
-                        if (std.mem.eql(u8, lexeme, "fn")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "fn"));
-                        if (std.mem.eql(u8, lexeme, "end")) try tokenList.push(self.initToken(TokenType.KeywordToken.END, "end"));
-                        if (std.mem.eql(u8, lexeme, "null")) try tokenList.push(self.initToken(TokenType.KeywordToken.NULL, "null"));
-                        if (std.mem.eql(u8, lexeme, "if")) try tokenList.push(self.initToken(TokenType.KeywordToken.IF, "if"));
-                        if (std.mem.eql(u8, lexeme, "elseif")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "elseif"));
-                        if (std.mem.eql(u8, lexeme, "else")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "else"));
-                        if (std.mem.eql(u8, lexeme, "then")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "then"));
-                        if (std.mem.eql(u8, lexeme, "while")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "while"));
-                        if (std.mem.eql(u8, lexeme, "for")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "for"));
-                        if (std.mem.eql(u8, lexeme, "mut")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "mut"));
-                        if (std.mem.eql(u8, lexeme, "break")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "break"));
-                        if (std.mem.eql(u8, lexeme, "continue")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "continue"));
-                        if (std.mem.eql(u8, lexeme, "return")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "return"));
-                        if (std.mem.eql(u8, lexeme, "throw")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "throw"));
-                        if (std.mem.eql(u8, lexeme, "catch")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "catch"));
-                        if (std.mem.eql(u8, lexeme, "try")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "try"));
-                        if (std.mem.eql(u8, lexeme, "import")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "import"));
-                        if (std.mem.eql(u8, lexeme, "export")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "export"));
-                        if (std.mem.eql(u8, lexeme, "public")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "public"));
-                        if (std.mem.eql(u8, lexeme, "inline")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "inline"));
-                        if (std.mem.eql(u8, lexeme, "typeof")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "typeof"));
-                        if (std.mem.eql(u8, lexeme, "type")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "type"));
-                        if (std.mem.eql(u8, lexeme, "enum")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "enum"));
-                        if (std.mem.eql(u8, lexeme, "struct")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "struct"));
-                        if (std.mem.eql(u8, lexeme, "in")) try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "in"));
+                        if (std.mem.eql(u8, lexeme, "Pointer")) {
+                            try tokenList.push(self.initToken(TokenType.AssignmentToken.POINTER, "Pointer"));
+                        } else if (std.mem.eql(u8, lexeme, "fn")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.FN, "fn"));
+                        } else if (std.mem.eql(u8, lexeme, "atomic")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.ATOMIC, "atomic"));
+                        } else if (std.mem.eql(u8, lexeme, "end")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.END, "end"));
+                        } else if (std.mem.eql(u8, lexeme, "null")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.NULL, "null"));
+                        } else if (std.mem.eql(u8, lexeme, "if")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.IF, "if"));
+                        } else if (std.mem.eql(u8, lexeme, "elseif")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.ELSEIF, "elseif"));
+                        } else if (std.mem.eql(u8, lexeme, "else")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.ELSE, "else"));
+                        } else if (std.mem.eql(u8, lexeme, "then")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.THEN, "then"));
+                        } else if (std.mem.eql(u8, lexeme, "while")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.WHILE, "while"));
+                        } else if (std.mem.eql(u8, lexeme, "for")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.FOR, "for"));
+                        } else if (std.mem.eql(u8, lexeme, "mut")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.MUT, "mut"));
+                        } else if (std.mem.eql(u8, lexeme, "break")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.BREAK, "break"));
+                        } else if (std.mem.eql(u8, lexeme, "continue")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.CONTINUE, "continue"));
+                        } else if (std.mem.eql(u8, lexeme, "return")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.RETURN, "return"));
+                        } else if (std.mem.eql(u8, lexeme, "throw")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.THROW, "throw"));
+                        } else if (std.mem.eql(u8, lexeme, "catch")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.CATCH, "catch"));
+                        } else if (std.mem.eql(u8, lexeme, "try")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.TRY, "try"));
+                        } else if (std.mem.eql(u8, lexeme, "import")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.IMPORT, "import"));
+                        } else if (std.mem.eql(u8, lexeme, "export")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.EXPORT, "export"));
+                        } else if (std.mem.eql(u8, lexeme, "public")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.PUBLIC, "public"));
+                        } else if (std.mem.eql(u8, lexeme, "inline")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.INLINE, "inline"));
+                        } else if (std.mem.eql(u8, lexeme, "typeof")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.TYPEOF, "typeof"));
+                        } else if (std.mem.eql(u8, lexeme, "type")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.TYPE, "type"));
+                        } else if (std.mem.eql(u8, lexeme, "enum")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.ENUM, "enum"));
+                        } else if (std.mem.eql(u8, lexeme, "struct")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.STRUCT, "struct"));
+                        } else if (std.mem.eql(u8, lexeme, "in")) {
+                            try tokenList.push(self.initToken(TokenType.KeywordToken.IN, "in"));
+                        } else {
 
-                        self.cursor += jump;
+                            // Lexeme didn't match against any of the keywords
+                            // Then it has to be an identifier or a datatype
+                            // TODO: Limit what identifiers can be used
+
+                            try tokenList.push(self.initToken(TokenType.LiteralToken.IDENTIFIER, lexeme));
+                        }
                     }
+
+                    // We did not find any meaningful character in this section
+                    // This should not be reachable
+                    else {
+                        unreachable;
+                        //return LexerError.UnrecognizableCharacter;
+                    }
+
+                    // FIXME: Since cursor jumps anyways, maybe jump one less
+                    // No matter what we get, we jump ahead
+                    self.cursor += jump;
                 },
 
                 // Escape chars
@@ -247,18 +371,22 @@ pub const Lexer = struct {
                 _ => LexerError.UnrecognizableCharacter,
             }
         }
+        // ======= END OF LOOP ================
 
         for (self.tokenList.items) |token| {
             token.print();
         }
 
-        // ======= END OF LOOP ================
-
-        // var loc: Location = Location.init(payload, 42, 42);
-        // var t: Token = Token.init(loc, TokenType.ARROW, "hello");
-
         // TODO: Remember to free this after they have been used
         return tokenList.toOwnedSlice();
+    }
+
+    /// Check if we're at the end of the file
+    ///
+    /// Checks bounds for cursor and there actually exist data at given position
+    fn endOfFile(self: Self) bool {
+        // FIXME: For large files, we can't assume we know the length of it all
+        return !self.data[self.cursor + 1] or self.cursor == self.data.len - 1;
     }
 
     /// Peeks one char ahead in the future
@@ -324,6 +452,17 @@ pub const Lexer = struct {
         return Token.init(tt, location, lexeme);
     }
 
+    // TODO: Find out if this is a correct way to think about scanning of floats
+    /// Check if a lexeme contains a dot or not
+    /// This way we can indicate further down that this is a float
+    fn containsDot(self: Self, lexeme: []u8) bool {
+        _ = self;
+        for (lexeme) |c| {
+            if (c == '.') return true;
+        }
+        return false;
+    }
+
     // =====================
     //   Helpers
     // =====================
@@ -374,8 +513,9 @@ pub const Lexer = struct {
     }
 };
 
+// TODO: ADD MANY TESTS
 // =========================
-//     TESTS FOR LEXER
+//     TESTS FOR Lexer
 // =========================
 test "docs" {
     std.testing.refAllDecls(Lexer);

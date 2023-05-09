@@ -26,6 +26,8 @@ pub const LiteralToken = enum(u8) {
     F32,
     F64,
     F128,
+    INTEGER,
+    FLOAT,
     STRING,
     CHAR,
     IDENTIFIER, // name of function or variable
@@ -58,11 +60,15 @@ pub const AssignmentToken = enum(u8) {
     BRACKETOPEN,
     BRACKETCLOSE,
 
+    UNDERSCORE,
+
     END, // End is both a keyword and a assignment for somethings
 };
 
 /// Tokens I dont where to place
 pub const SpecialToken = enum(u8) {
+    QUOTE, // '
+    DOUBLEQUOTE, // "
     COLONCOLON, //   h :: t
     EQUALARROW, //   h => ...
     DOTDOT, // .. range
@@ -70,6 +76,8 @@ pub const SpecialToken = enum(u8) {
     PLUSPLUS, // list and string concat
     NEWLINE, // \n
     EOF,
+    PIPE, // |
+    ANDPERCEN, // Can both be for bit logic and references
     UNKNOWN,
     COMMA,
     ATSIGN, // @ for builtins? hashtags??
@@ -126,5 +134,6 @@ pub const KeywordToken = enum(u8) {
     TYPEOF,
     ENUM,
     STRUCT,
+    ATOMIC, // atomic before type marks it as an atomic!
     IN, // TODO: Find out if we actually want this
 };

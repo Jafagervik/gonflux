@@ -26,14 +26,18 @@ pub fn main() anyerror!void {
 
     // TODO: Find out if we're just gonna return a pointer to path instead
     const payload = try file.readToEndAlloc(allocator, BUFSIZE);
-    allocator.free(payload);
+    defer allocator.free(payload);
+
+    if (Constants.DEBUG) {
+        for (payload, 0..) |char, idx| {
+            std.debug.print("{d:>2}: {c}\n", .{ idx, char });
+        }
+    }
 
     // Lexical Analysis
     var lexer: lex.Lexer = lex.Lexer.init(TESTFILE, payload);
 
-    for (lexer.data, 0..) |char, idx| {
-        std.debug.print("{d:>2}: {c}\n", .{ idx, char });
-    }
+    std.debug.print("{d} {d} {d}\n\n {s}\n", .{ lexer.cursor, lexer.beginning_of_line, lexer.row, lexer.data });
 
     // TODO: If lex fails, report error and exit
     // var token_iterator: TokenIter = try lexer.tokenize(payload);
