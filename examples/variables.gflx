@@ -1,0 +1,17 @@
+@import "std"
+
+main :: () -> 
+    // I am a compiletime constant 
+    a: compiletime i32 = 4
+
+    // I am an immutable variable   
+    b: i32 = 5
+
+    // I am a mutable variable
+    mut c: i32 = 6 
+
+    // I am the result
+    d: i32 = a + b + c
+
+    print("I am {}\n", {})
+end

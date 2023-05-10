@@ -1,24 +1,67 @@
 # Core Data Types for GonFLUX
-## Might remove types
 
-- integers 
-- unsigned integers
-- floats             16, 32, 64
-- lists            []i32
-- char              'a'
-- str               "A"
-- bool              true | false 
-- option            i32|e1
-- enum
-- struct            
-- sets              () must have different values
-// NOTE: Sets will only work for numbers, strings and char at the start?
+## Integers 
+
+i8, i16, i32, i64, i128 -12347
+
+## Unsigned Integers 
+u8, u16, u32, u64, u128 123 
+
+## Floats 
+f8, f16, f32, f64, f128 0.123
+
+## Atomic Integers
+`atomic` is a keyword which marks a variable as atomic
+
+## Booleans
+bool, true
+
+## Strings 
+str, "A string"
+
+## Char 
+char, 'a'
+
+## Enums 
+enum,
+
+## Structs
+struct 
+
+## Option, which is basically a built in Enum 
+Option[U, V] means: 
+enum Option ->
+    left: U,
+    right: V,
+end
+
+## Array 
+Array[i32]
+
+
+## Vectors 
+Vector[i32], dynamically sized arrays
+
+## Ranges
+Works like an iterator containing pointer to start, and how long it will be
+0..10, 1..=20 
+
+## SIMD 
+SIMD[i32]
+Target the specific registers to perform simd vector operations
+
+## Sets 
+Set[i32]
+
+## CUDA Types 
+CudaArray[f32]
+CudaHandle
+CudaStatus
 
 ## In the future: 
-
-- Atomic types for all of these 
-- Sem
+- Semaphores
 - Mutex 
-- Option 
-- 
+- Thread type
+- Matrix
+
 

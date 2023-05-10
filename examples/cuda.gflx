@@ -1,0 +1,23 @@
+@import "std"
+@import "cuda"
+
+
+@kernel saxpy :: (n: i32, a: f32,  x: Pointer[f32], y: Pointer[f32]) void ->
+    i: i32 = blockIdx.x*blockDim.x + threadIdx.x;
+    if (i < n) then y[i] += a * x[i]
+end
+
+
+
+main :: () -> 
+    a: i32 = 1 << 20
+
+    cuMemCpy(dx, x, N, HTD)
+    cuMemCpy(dy, y, N, HTD)
+
+
+    // Call as a generic
+    saxpy[4096, 256]()
+
+    cuMemCpy(y, dy, N, DTD)
+end

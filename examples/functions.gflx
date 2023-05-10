@@ -1,0 +1,19 @@
+@import "std"
+
+
+// I am a easy function
+sub5 :: (a: i32) i32 ->
+    return a - 5
+end
+
+
+
+main :: () ->
+
+    a: i32 = 10
+
+    b = sub5(a)
+
+    print(b)
+
+end

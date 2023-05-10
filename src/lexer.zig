@@ -79,7 +79,7 @@ pub const Lexer = struct {
     file_path: []const u8 = undefined,
 
     /// Source data to read in from
-    data: []u8 = undefined,
+    data: []const u8 = undefined,
 
     /// Current index of file we're looking at, also called cursor
     cursor: usize = 0,
@@ -96,7 +96,7 @@ pub const Lexer = struct {
     ///
     /// file_path: str, absolute filepath to source file
     /// payload: char iterator, every char to read from
-    pub fn init(file_path: []const u8, payload: []u8) Lexer {
+    pub fn init(file_path: []const u8, payload: []const u8) Lexer {
         return Lexer{ .file_path = file_path, .data = payload };
     }
 
@@ -117,11 +117,14 @@ pub const Lexer = struct {
 
         // While we're not at the end of the file and can get a character
         while (!self.endOfFile()) : (self.cursor += 1) {
+            std.debug.print("C start: {c}\n", .{self.data[self.cursor]});
 
             // Move until we actually get what we want
             self.chopSpace();
 
             var c = self.data[self.cursor];
+
+            std.debug.print("C got here: {c}\n", .{c});
 
             // We are now looking at first token in a lexeme
             switch (c) {
@@ -276,7 +279,10 @@ pub const Lexer = struct {
 
                 // If they are none of the afformentioned, it has to be string or digit, or escape char
                 else => {
+                    std.debug.print("C got inside right place: {c}\n", .{c});
                     const lexeme = self.getLexeme();
+
+                    std.debug.print("Lexeme: {s}\n", .{lexeme});
                     const jump: usize = lexeme.len;
 
                     // Used as identifier
@@ -295,9 +301,9 @@ pub const Lexer = struct {
                             try tokenList.append(self.initToken(TokenType.INTEGER, lexeme));
                         }
                     } else if (std.ascii.isAlphabetic(c)) {
-                        // ====================
-                        //  KEYWORDS
-                        // ====================
+                        // =================================================================
+                        //                         KEYWORDS
+                        // =================================================================
                         // TODO: Optimize this pattern matching perhaps
                         if (std.mem.eql(u8, lexeme, "Pointer")) {
                             try tokenList.append(self.initToken(TokenType.POINTER, "Pointer"));
@@ -329,6 +335,8 @@ pub const Lexer = struct {
                             try tokenList.append(self.initToken(TokenType.CONTINUE, "continue"));
                         } else if (std.mem.eql(u8, lexeme, "return")) {
                             try tokenList.append(self.initToken(TokenType.RETURN, "return"));
+                        } else if (std.mem.eql(u8, lexeme, "match")) {
+                            try tokenList.append(self.initToken(TokenType.MATCH, "match"));
                         } else if (std.mem.eql(u8, lexeme, "throw")) {
                             try tokenList.append(self.initToken(TokenType.THROW, "throw"));
                         } else if (std.mem.eql(u8, lexeme, "catch")) {
@@ -353,6 +361,9 @@ pub const Lexer = struct {
                             try tokenList.append(self.initToken(TokenType.STRUCT, "struct"));
                         } else if (std.mem.eql(u8, lexeme, "in")) {
                             try tokenList.append(self.initToken(TokenType.IN, "in"));
+                            // =====================================================================
+                            //                     END OF KEYWORDS
+                            // =====================================================================
                         } else {
 
                             // Lexeme didn't match against any of the keywords
@@ -465,10 +476,9 @@ pub const Lexer = struct {
     /// This way we can indicate further down that this is a float
     fn containsDot(self: Self, lexeme: []const u8) bool {
         _ = self;
-        for (lexeme) |c| {
-            if (c == '.') return true;
-        }
-        return false;
+        return for (lexeme) |c| {
+            if (c == '.') break true;
+        } else false;
     }
 
     // =====================
@@ -512,7 +522,6 @@ pub const Lexer = struct {
     }
 };
 
-// TODO: ADD MANY TESTS
 // =========================
 //     TESTS FOR Lexer
 // =========================
@@ -536,6 +545,20 @@ test "helpers" {
     try std.testing.expectEqual(true, l.isValidDatatype("f128"));
     try std.testing.expectEqual(true, l.isValidDatatype("f16"));
     try std.testing.expectEqual(false, l.isValidDatatype("f420"));
+}
+
+test "Simple lexing" {
+    const data: []const u8 =
+        \\fn main() ->
+        \\end
+    ;
+
+    var scanner = Lexer.init("./test.gflx", data);
+    var lst = try scanner.tokenize();
+
+    var tok1 = lst[0];
+    tok1.print();
+    try std.testing.expectEqual(tok1.tokenType, TokenType.FN);
 }
 
 // test "lexical analysis" {

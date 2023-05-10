@@ -4,125 +4,110 @@
 pub const TokenType = enum(u8) {
     // LITERALS
 
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-    I8,
-    I16,
-    I32,
-    I64,
-    I128,
-    F8, // TODO: is it really needed?
-    F16,
-    F32,
-    F64,
-    F128,
-    INTEGER,
-    FLOAT,
-    STRING,
-    CHAR,
-    IDENTIFIER, // name of function or variable
-    BOOL,
+    INTEGER, // 4
+    FLOAT, // 3.23
+    STRING, // "sfdg"
+    CHAR, // 'c'
+    IDENTIFIER, // name of function or variable _abcDEF123
+    BOOL, // true
+    POINTER, // Pointer[]
 
     ARROW, // -> For starting the block
 
-    COLON, // for return values
-    EQUAL,
-    PLUSEQUAL,
-    MINUSEQUAL,
+    COLON, // : for return values
+    EQUAL, // =
+    PLUSEQUAL, // +=
+    MINUSEQUAL, // -=
     ASTERISKEQUAL, // *=
-    DIVIDEEQUAL,
-    MODEQUAL,
-    BITANDEQUAL,
+    DIVIDEEQUAL, // /=
+    MODEQUAL, // %=
+    BITANDEQUAL, // &=
     BITNOTEQUAL, // ~=
-    BITOREQUAL,
-    BITXOREQUAL,
-    BITSHIFTLEFTEQUAL,
-    BITSHIFTRIGHTEQUAL,
+    BITOREQUAL, // |=
+    BITXOREQUAL, // ^
+    BITSHIFTLEFTEQUAL, // <<=
+    BITSHIFTRIGHTEQUAL, // >>=
     ASSIGNMENTEND, // Possibly nothing, since we don't allow this currently
     // Now for the list destructuring
     CONCATEQUAL, // ++=
 
     // Brackets
-    PARENTOPEN,
-    PARENTCLOSE,
-    BRACEOPEN,
-    BRACECLOSE,
-    BRACKETOPEN,
-    BRACKETCLOSE,
+    PARENTOPEN, // (
+    PARENTCLOSE, // )
+    BRACEOPEN, // [
+    BRACECLOSE, // ]
+    BRACKETOPEN, // {
+    BRACKETCLOSE, // }
 
-    END, // End is both a keyword and a assignment for somethings
+    END, // end     End is both a keyword and a assignment for somethings
 
     // OPERATORS
 
-    PLUS, // Pluses an operation
-    MINUS,
-    ASTERISK, // multiply or dereferencing
-    DIVIDE,
-    MODULO,
-    POW, // **, FIXME: Could be tricky with pointers
-    BITAND,
-    BITNOT,
-    BITOR,
-    BITXOR,
+    PLUS, // +
+    MINUS, // -
+    ASTERISK, // *  multiply or dereferencing
+    DIVIDE, // /
+    MODULO, // %
+    POW, // ** ,  FIXME: Could be tricky with pointers
+    BITAND, // &
+    BITNOT, // ~
+    BITOR, // |
+    BITXOR, // ^
     BITSHIFTLEFT, // <<
     BITSHIFTRIGHT, // >>
     AND, // and, or, not is operators here
-    OR,
-    NOT,
-    GREATER,
-    LESS,
-    NOTEQUAL,
-    GREATEREQUAL,
-    LESSEQUAL,
+    OR, // or
+    NOT, // not
+    GREATER, // >
+    LESS, // <
+    NOTEQUAL, // !=
+    GREATEREQUAL, // >=
+    LESSEQUAL, // <=
 
     // SPECIALS
 
     QUOTE, // '
     DOUBLEQUOTE, // "
-    COLONCOLON, //   h :: t
-    EQUALARROW, //   h => ...
+    COLONCOLON, //   ::
+    EQUALARROW, //   =>
     DOTDOT, // .. range
     DOTDOTEQUAL, // ..= inclusive range
-    PLUSPLUS, // list and string concat
+    PLUSPLUS, // ++ list and string concat
     NEWLINE, // \n
-    EOF,
+    EOF, // EOF
     PIPE, // |
-    ANDPERCEN, // Can both be for bit logic and references
-    UNKNOWN,
-    COMMA,
+    ANDPERCEN, // &  Can both be for bit logic and references
+    UNKNOWN, // ???
+    COMMA, // ,
     ATSIGN, // @ for builtins? hashtags??
     UNDERSCORE, // _ for patternmatching
 
     // KEYWORDS
 
-    NULL, // DO WE WANT
-    PRINT,
-    IF,
-    ELSEIF,
-    ELSE,
-    THEN,
-    WHILE,
-    FOR,
-    MUT,
-    BREAK,
-    FN,
-    CONTINUE,
-    RETURN,
-    THROW,
-    TRY,
-    CATCH,
-    IMPORT,
-    EXPORT,
-    PUBLIC,
-    TYPE,
-    INLINE,
-    TYPEOF,
-    ENUM,
-    STRUCT,
+    NULL, // null  DO WE WANT ?
+    IF, // if
+    ELSEIF, // elseif
+    ELSE, // else
+    THEN, // then
+    WHILE, // while
+    FOR, // for
+    MUT, // mut
+    BREAK, // break
+    FN, // fn
+    MATCH, // match
+    CONTINUE, // continue
+    RETURN, // return
+    THROW, // throw
+    TRY, // try
+    CATCH, // catch
+    IMPORT, // import
+    EXPORT, // export
+    PUBLIC, // pub or public
+    TYPE, // type
+    INLINE, // inline
+    TYPEOF, // typeof
+    ENUM, // enum
+    STRUCT, // struct
     ATOMIC, // atomic before type marks it as an atomic!
-    IN, // TODO: Find out if we actually want this
-    POINTER, // Pointer[i32]
+    IN, // in   TODO: Find out if we actually want this
 };

@@ -1,15 +1,15 @@
 @import "std"
+
 alias Vector = std.vector.Vector
 alias Time = std.time.Time 
 alias PI = std.math.constants.PI // std.constants.PI 
 
-a: compile i32 = 32;
+a: compiletime i32 = 32
 
-struct S ->
-    size: i32 
+S :: struct ->
+    size: i32 = 0
 
-
-    fn init(s: i32) : Self ->
+    init :: (s: i32) Self ->
         return S { size: s }
     end
 end
@@ -18,36 +18,28 @@ end
 // Typenames 
 
 
-struct S[type T] ->
+S[type T] :: struct ->
     value: T
 
-    // Or maybe use something else instead
-    fn @print -> print("Value is {}", {value}) end
+    print :: () -> print("Value is {}", {value}) end
 end
 
-enum b -> 
+b :: enum  -> 
     Hello = 2,
     Bye
 end
 
 
 // I would like to destructure sets, ranges, vectors?? and possibly matrices
-fn function() : i32 ->
+function :: () i32 ->
 
     mut a: i32 = 0
 
     mut c: Range[i32] = 0..5
-
-    d: [i32] = match c -> 
-        h :: t => List(t)
-        h :: _ => [h]
-        []     => List.new(0..=10)
-
-    end 
 end
 
 
-fn voidfunc() ->
+voidfunc :: () ->
     mut a: i32 = 4
 
     c: Pointer[mut i32] = &a
@@ -63,7 +55,7 @@ fn voidfunc() ->
 end 
 
 
-fn vector() : Vector[f32] ->
+vector :: () Vector[f32] ->
     mut a: Vector[i32] = Vector.init(1..=10)
 
     a.push(11)
@@ -71,11 +63,10 @@ fn vector() : Vector[f32] ->
     @assert(a == Vector.init(1..=11))
 
     return a
-
 end
 
 
-fn set() : Set[i32] ->
+set :: () Set[i32] ->
     
     // Will remove duplicates
     mut a: Set[i32] = Set.new([1,2,3,4,4])
@@ -88,7 +79,7 @@ fn set() : Set[i32] ->
 end 
 
 
-fn Matrix() : Matrix[i32] ->
+getMatrix :: () Matrix[i32] ->
     
     // Potentially specify type inside 
 
@@ -108,7 +99,7 @@ end
 
 
 // 3 x 3 x 3 tensor 
-fn tensor() : Tensor[(3,3,3)] -> 
+tensor :: () Tensor[(3,3,3)] -> 
     
     
     @todo("Soon")
@@ -116,37 +107,12 @@ fn tensor() : Tensor[(3,3,3)] ->
 end
 
 
-fn loops() ->
-
-    mut a = 0
-
-    while a < 10 |a += 1| then 
-        println("a is {}", {a})
-    end
-
-    a = 0
-
-    lst: [i32] = [1..=20]
-
-    for |i, elem| in lst then 
-        print("{}: {}", {i, elem})
-    end
-
-    for elem in list then 
-        print("{}: {}", {i, elem})
-    end
-
-    for i in 0..10 then 
-        print("{}", {i})
-    end
-
-end
-
 
 // Function currying
 // Fn(i32)
 
-fn main() ->
+
+main :: () ->
     mut a: i32 = 0;
 
     // Type inference
@@ -160,7 +126,7 @@ fn main() ->
 end 
 
 
-fn createLambda(u: i32, v: i32) : Fn(i32, i32) -> 
+createLambda :: (u: i32, v: i32) Fn(i32, i32) -> 
 
     aux = \x: i32 -> x ** 2
     
@@ -173,8 +139,6 @@ end
 
 @test "Hello" ->
     mut a: usize = 68420
-
-
 
     a: i32, b: i32 = 42, 23
 
