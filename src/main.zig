@@ -39,8 +39,7 @@ pub fn main() anyerror!void {
 
     std.debug.print("{d} {d} {d}\n\n {s}\n", .{ lexer.cursor, lexer.beginning_of_line, lexer.row, lexer.data });
 
-    // TODO: If lex fails, report error and exit
-    // var token_iterator: TokenIter = try lexer.tokenize(payload);
+    var token_iterator = try lexer.tokenize(payload);
 
     // while (token_iterator.next()) |*token| {
     //     token.print();

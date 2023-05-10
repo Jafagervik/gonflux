@@ -2,15 +2,8 @@
 ///
 /// See DataTypes.md for full list of supported tokens with better explenation
 pub const TokenType = enum(u8) {
-    KeywordToken,
-    OperatorToken,
-    LiteralToken,
-    SpecialToken,
-    AssignmentToken,
-};
+    // LITERALS
 
-/// Literaltokens
-pub const LiteralToken = enum(u8) {
     U8,
     U16,
     U32,
@@ -32,18 +25,18 @@ pub const LiteralToken = enum(u8) {
     CHAR,
     IDENTIFIER, // name of function or variable
     BOOL,
-};
 
-pub const AssignmentToken = enum(u8) {
     ARROW, // -> For starting the block
 
     COLON, // for return values
     EQUAL,
     PLUSEQUAL,
     MINUSEQUAL,
+    ASTERISKEQUAL, // *=
     DIVIDEEQUAL,
     MODEQUAL,
     BITANDEQUAL,
+    BITNOTEQUAL, // ~=
     BITOREQUAL,
     BITXOREQUAL,
     BITSHIFTLEFTEQUAL,
@@ -60,13 +53,33 @@ pub const AssignmentToken = enum(u8) {
     BRACKETOPEN,
     BRACKETCLOSE,
 
-    UNDERSCORE,
-
     END, // End is both a keyword and a assignment for somethings
-};
 
-/// Tokens I dont where to place
-pub const SpecialToken = enum(u8) {
+    // OPERATORS
+
+    PLUS, // Pluses an operation
+    MINUS,
+    ASTERISK, // multiply or dereferencing
+    DIVIDE,
+    MODULO,
+    POW, // **, FIXME: Could be tricky with pointers
+    BITAND,
+    BITNOT,
+    BITOR,
+    BITXOR,
+    BITSHIFTLEFT, // <<
+    BITSHIFTRIGHT, // >>
+    AND, // and, or, not is operators here
+    OR,
+    NOT,
+    GREATER,
+    LESS,
+    NOTEQUAL,
+    GREATEREQUAL,
+    LESSEQUAL,
+
+    // SPECIALS
+
     QUOTE, // '
     DOUBLEQUOTE, // "
     COLONCOLON, //   h :: t
@@ -82,40 +95,15 @@ pub const SpecialToken = enum(u8) {
     COMMA,
     ATSIGN, // @ for builtins? hashtags??
     UNDERSCORE, // _ for patternmatching
-};
 
-/// Operator Tokens
-pub const OperatorToken = enum(u8) {
-    PLUS, // Pluses an operation
-    MINUS,
-    ASTERISK, // multiply or dereferencing
-    ANDPERCEN, // reference?
-    DIVIDE,
-    MODULO,
-    POW, // **, FIXME: Could be tricky with pointers
-    BITAND,
-    BITOR,
-    BITXOR,
-    BITSHIFTLEFT, // <<
-    BITSHIFTRIGHT, // >>
-    AND, // and, or, not is operators here
-    OR,
-    NOT,
-    GREATER,
-    LESS,
-    EQUAL,
-    NOTEQUAL,
-    GREATEREQUAL,
-    LESSEQUAL,
-};
+    // KEYWORDS
 
-/// Token keywords
-pub const KeywordToken = enum(u8) {
     NULL, // DO WE WANT
     PRINT,
     IF,
     ELSEIF,
     ELSE,
+    THEN,
     WHILE,
     FOR,
     MUT,
@@ -136,4 +124,5 @@ pub const KeywordToken = enum(u8) {
     STRUCT,
     ATOMIC, // atomic before type marks it as an atomic!
     IN, // TODO: Find out if we actually want this
+    POINTER, // Pointer[i32]
 };
