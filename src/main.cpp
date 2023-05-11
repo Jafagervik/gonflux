@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     std::cout << payload.size() << std::endl;
 
     std::for_each(payload.begin(), payload.end(),
-                  [](const char &c) { std::cout << c << " "; });
+                  [](const char &c) { std::cout << c << ""; });
 
     // Lex
     auto lexer = Lexer(filename, payload);
@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
 
     // TODO: Tokenlist should be turned into iterator
 
-    // std::for_each(lexer.token_list.begin(), lexer.token_list.end(), [](const
-    // auto &t) {std::cout << *t << ' '; });
+    std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
+                  [](const auto &t) { std::cout << *t << ' '; });
 
     file.close();
 

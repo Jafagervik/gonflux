@@ -8,13 +8,6 @@
  * in this project
  */
 typedef enum {
-    TOKEN_INTEGER = 0,        // 4
-    TOKEN_FLOAT,              // 3.23
-    TOKEN_STRING,             // "sfdg"
-    TOKEN_CHAR,               // 'c'
-    TOKEN_IDENTIFIER,         // name of function or variable _abcDEF123
-    TOKEN_BOOL,               // true
-    TOKEN_POINTER,            // Pointer[]
     TOKEN_ARROW,              // -> For starting the block
     TOKEN_COLON,              // : for return values
     TOKEN_EQUAL,              // =
@@ -103,16 +96,21 @@ typedef enum {
     TOKEN_PARALLEL, // parallel could be used in front of loops to parallelize
     TOKEN_COMPILETIME, // Compiletime variables!
     TOKEN_IN,          // in   TODO: Find out if we actually want this
+    // ==================
+    //   Dtypes
+    // ===================
+    TOKEN_HEX,
+    TOKEN_BIT,
+    TOKEN_INTEGER,    // 4
+    TOKEN_FLOAT,      // 3.23
+    TOKEN_STRING,     // "sfdg"
+    TOKEN_CHAR,       // 'c'
+    TOKEN_IDENTIFIER, // name of function or variable _abcDEF123
+    TOKEN_BOOL,       // true
+    TOKEN_POINTER,    // Pointer[]
 } TokenType;
 
 static const std::string nameTT[] = {
-    "TOKEN_INTEGER",
-    "TOKEN_FLOAT",
-    "TOKEN_STRING",
-    "TOKEN_CHAR",
-    "TOKEN_IDENTIFIER",
-    "TOKEN_BOOL",
-    "TOKEN_POINTER",
     "TOKEN_ARROW",
     "TOKEN_COLON",
     "TOKEN_EQUAL",
@@ -201,6 +199,15 @@ static const std::string nameTT[] = {
     "TOKEN_PARALLEL",
     "TOKEN_COMPILETIME",
     "TOKEN_IN",
+    "TOKEN_HEX",
+    "TOKEN_BIT",
+    "TOKEN_INTEGER",
+    "TOKEN_FLOAT",
+    "TOKEN_STRING",
+    "TOKEN_CHAR",
+    "TOKEN_IDENTIFIER",
+    "TOKEN_BOOL",
+    "TOKEN_POINTER",
 };
 
 typedef enum LEXER_ERROR {
@@ -235,7 +242,7 @@ typedef struct Token {
         }
 
         friend std::ostream &operator<<(std::ostream &os, const Token &t) {
-            os << "Token Type " << nameTT[t.type];
+            os << "TType " << nameTT[t.type];
 
             // If we dont have text we dont output it, just the type
             if (t.lexeme == nullptr) {

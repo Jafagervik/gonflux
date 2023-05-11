@@ -33,6 +33,8 @@ void Lexer::tokenize() {
         case ':':
             if (match(':')) {
                 add_token(TOKEN_COLONCOLON);
+            } else {
+                add_token(TOKEN_COLON);
             }
 
             break;
@@ -297,45 +299,70 @@ void Lexer::char_lexeme() {
 // TODO: Check if identifier is keyword or dtype
 void Lexer::literal_lexeme() { advance(); }
 
-/** integers, floats, hex and bits
- *
- */
 void Lexer::number_lexeme() {
-    if (peek() == '0')
+    if (peek() == '0') {
         zeros();
+        return;
+    }
+
+    // NOTE: Not a float, can still be a number
+
+    const auto start_position_itr = this->cursor_itr;
+    const auto literal_start_idx = this->cursor;
+
+    while (is_digit(*this->cursor_itr) && !end_of_file())
+        advance();
 }
 
-/** Zeros should be lexed carefully
- *
- */
 void Lexer::zeros() {
     // We need to pass this on down the states to iterate
-    const auto start_position_itr = this->cursor_itr;
-    const auto startcursor = this->cursor_itr;
+    const auto starting_position = this->cursor_itr;
+    const auto literal_start_idx = this->cursor;
 
     auto next = peek_neighbor();
 
     if (next == '.') {
-        floats(start_position_itr);
+        floats(starting_position);
     } else if (next == 'x') {
-        hexnumbers(start_position_itr);
+        hexnumbers(starting_position);
     } else if (next == 'b') {
-        binarynumbers(start_position_itr);
+        binarynumbers(starting_position);
     }
 
     // if were e down here, they just have a lot of numbers
     while (is_digit(*this->cursor_itr) && !end_of_file())
         advance();
+
+    const std::string literal = get_literal(starting_position);
+
+    add_token(TOKEN_INTEGER, literal);
 }
 
 void Lexer::floats(const std::vector<char>::iterator starting_position) {
     while (is_digit(*this->cursor_itr) && !end_of_file())
         advance();
+
+    const std::string literal = get_literal(starting_position);
+
+    add_token(TOKEN_FLOAT, literal);
 }
 
-void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {}
+void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
+    while (is_hex(*this->cursor_itr) && !end_of_file())
+        advance();
+
+    const std::string literal = get_literal(starting_position);
+
+    add_token(TOKEN_HEX, literal);
+}
 
 void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
+    while (is_bit(*this->cursor_itr) && !end_of_file())
+        advance();
+
+    const std::string literal = get_literal(starting_position);
+
+    add_token(TOKEN_BIT, literal);
 }
 
 // ===================================================
