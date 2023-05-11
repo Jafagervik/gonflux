@@ -1,53 +1,29 @@
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include "args.h"
 #include "constants.h"
 #include "file.h"
 #include "lexer.h"
 #include "parser.h"
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <string_view>
-#include <utility>
-#include <vector>
 #include "pch.h"
 #include "timer.h"
 
-typedef enum ReturnCode {
-    Success = 0,
-    FileNotFound,
-    EndOfFile,
-    TokenError,
-    IncompatibleExtension
-} ReturnCode;
-
 int main(int argc, char *argv[]) {
-    if (argc < 2)
-        std::cout << "Too few arguments\n";
+    const auto args = std::make_unique<ArgsParser>(ArgsParser(argc, argv));
 
-    const std::vector<std::string_view> args(argv + 1, argv + argc);
+    u32 status = args->parse_args();
+    if (status != 0)
+        return status;
 
-    for (const auto &option : args) {
-        if (option == "--help" || option == "-h")
-            std::cout << MENU;
-    }
+    std::cout << args->filename << std::endl;
 
-    // Don't allow weird symbols in filenames either
-    auto accepted_filenames = [](const char c) {
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
-               (c >= 'A' && c <= 'Z') || c == '_';
-    };
-
-    // FIXME: Not safe to let anyone run whatever they want
-    char *filename = argv[1];
-
-    std::string_view fn = filename;
-    auto extension = fn.substr(fn.size() - 5);
-
-    if (extension != ".gflx")
-        return IncompatibleExtension;
-
-    // std::for_each(filename.begin(), filename.end() - 5, accepted_filenames);
-
-    std::ifstream file(filename, std::ios::binary);
+    std::ifstream file(args->filename, std::ios::binary);
 
     std::vector<char> payload;
 
@@ -55,14 +31,12 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Number of chars: " << payload.size() << "\n\n";
 
-    std::for_each(payload.begin(), payload.end(),
-                  [](const char &c) { std::cout << c << ""; });
+    // std::for_each(payload.begin(), payload.end(),
+    //             [](const char &c) { std::cout << c << ""; });
 
-    auto lexer = Lexer(filename, payload);
+    auto lexer = Lexer(args->filename, payload);
 
     TIMER(lexer.tokenize);
-
-    std::cout << "\nTIME: " << dur << "s\n";
 
     std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
 

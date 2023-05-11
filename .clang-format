@@ -1,9 +1,10 @@
 Standard: c++20
 TabWidth: 4
 ColumnLimit: 80
-SortIncludes: false
+SortIncludes: true
 IndentWidth: 4
 AccessModifierOffset: -4
 IndentAccessModifiers: true
 Language: Cpp
+
 

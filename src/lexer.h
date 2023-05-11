@@ -36,7 +36,7 @@ const static std::array<std::string, 15> supported_number_datatypes = {
 typedef struct Lexer {
         // TODO: Add more files when dealing with
         //
-        std::string_view source_file;
+        std::string source_file;
         std::vector<char> data;
         std::vector<std::unique_ptr<Token>> token_list;
 
@@ -46,7 +46,7 @@ typedef struct Lexer {
         std::vector<char>::iterator cursor_itr;
 
         // Construtor
-        Lexer(char *source_file, std::vector<char> data)
+        Lexer(std::string source_file, std::vector<char> data)
             : source_file{source_file}, data{data}, cursor{0},
               beginning_of_line{0}, line{0} {
             // Alternative to cursor
