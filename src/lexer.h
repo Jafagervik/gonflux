@@ -79,9 +79,9 @@ typedef struct Lexer {
         //===================
         void zeros();
 
-        void floats(u32 start_position);
-        void hexnumbers(u32 start_position);
-        void binarynumbers(u32 start_position);
+        void floats(const std::vector<char>::iterator starting_position);
+        void hexnumbers(const std::vector<char>::iterator starting_position);
+        void binarynumbers(const std::vector<char>::iterator starting_position);
 
         /** for symbols
          *
@@ -142,6 +142,14 @@ typedef struct Lexer {
         bool is_hex(char c) {
             return c >= '0' && c <= '9' && c >= 'a' && c <= 'f' ||
                    c >= 'A' && c <= 'F';
+        }
+
+        /** from the vector of chars or pointer, get
+         *  us the substring telling us what the literal is
+         *
+         */
+        const std::string get_literal(const std::vector<char>::iterator start) {
+            return std::string(start, this->cursor_itr);
         }
 
         // TODO: Optimize with bits or something

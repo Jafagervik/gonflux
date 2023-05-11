@@ -309,16 +309,18 @@ void Lexer::number_lexeme() {
  *
  */
 void Lexer::zeros() {
-    u32 startpos = this->cursor;
+    // We need to pass this on down the states to iterate
+    const auto start_position_itr = this->cursor_itr;
+    const auto startcursor = this->cursor_itr;
 
     auto next = peek_neighbor();
 
     if (next == '.') {
-        floats(startpos);
+        floats(start_position_itr);
     } else if (next == 'x') {
-        hexnumbers(startpos);
+        hexnumbers(start_position_itr);
     } else if (next == 'b') {
-        binarynumbers(startpos);
+        binarynumbers(start_position_itr);
     }
 
     // if were e down here, they just have a lot of numbers
@@ -326,11 +328,15 @@ void Lexer::zeros() {
         advance();
 }
 
-void Lexer::floats(u32 starting_position) {}
+void Lexer::floats(const std::vector<char>::iterator starting_position) {
+    while (is_digit(*this->cursor_itr) && !end_of_file())
+        advance();
+}
 
-void Lexer::hexnumbers(u32 starting_position) {}
+void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {}
 
-void Lexer::binarynumbers(u32 starting_position) {}
+void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
+}
 
 // ===================================================
 //      ERRORS
