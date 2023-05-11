@@ -1,12 +1,6 @@
-all:
-	zig build-exe main.zig && ./main
+## Easy script 
+test: 
+	cd build && cmake .. && make && ./tests 
 
-test:
-	zig test 
-
-fmt:
-	zig fmt src/*
-
-
-clean:
-	rm ./main ./main.o 
+run: 
+	cd build && cmake .. && make && ./flux ./test.gflx

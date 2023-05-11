@@ -1,6 +1,20 @@
-#!/usr/bin/bash 
+# Set up and install this 
 
-echo "Compiling and building GonFLUX...\n"
-zig build
-echo "Done!"
-cp /zig-out/bin/gonflux ./ 
+# Make build if not exists
+if [-e build ]
+    mkdir build && cd build 
+else 
+    cd build 
+fi 
+
+# cmake top level 
+cmake ..
+
+# make 
+make 
+
+# cp executable to top 
+cp ./build/flux ./ 
+
+echo "Done building executable! Lets flux away"
+

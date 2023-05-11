@@ -1,9 +1,0 @@
-@import "std"
-
-// Generic function
-add[type T] :: (collection: Vector[i32]) ->
-    
-    // Remember pipes?
-    return collect |> sum() 
-
-end

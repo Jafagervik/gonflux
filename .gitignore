@@ -1,2 +1,7 @@
-/zig-cache/ 
-/zig-out/
+# C/C++ build outputs
+/build/*
+.build/
+bins
+gens
+libs
+objs
