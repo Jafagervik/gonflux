@@ -85,9 +85,9 @@ void Lexer::tokenize() {
             advance();
             break;
         case '\n': // This is what happens when we go to a new line
+            add_token(TOKEN_NEWLINE);
             this->line++;
             this->beginning_of_line = 0; // This is for column to be calculated
-            add_token(TOKEN_NEWLINE);
             break;
 
         case '|':
@@ -115,12 +115,46 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITNOT);
             }
             break;
-        case '\'': // We need to have a char
-            add_token(TOKEN_QUOTE);
+        case '>':
+            if (match('>')) {
+                if (match('=')) {
+                    add_token(TOKEN_BITSHIFTRIGHTEQUAL);
+                } else {
+                    add_token(TOKEN_BITSHIFTRIGHT);
+                }
+            } else if (match('=')) {
+                add_token(TOKEN_GREATEREQUAL);
+            } else {
+                add_token(TOKEN_GREATER);
+            }
+            break;
+        case '<':
+            if (match('<')) {
+                if (match('=')) {
+                    add_token(TOKEN_BITSHIFTLEFTEQUAL);
+                } else {
+                    add_token(TOKEN_BITSHIFTLEFT);
+                }
+            } else if (match('=')) {
+                add_token(TOKEN_LESSEQUAL);
+            } else {
+                add_token(TOKEN_LESS);
+            }
+            break;
+        case '\'':
             char_lexeme();
+            break;
+        case '"':
+            string_lexeme();
             break;
         case '@': // Should only be used for import keyword thus far
             add_token(TOKEN_ATSIGN);
+            break;
+        case '.':
+            add_token(TOKEN_DOT);
+            break;
+        case ',':
+            add_token(TOKEN_COMMA);
             break;
         // Characters
         case 'a':
@@ -176,7 +210,7 @@ void Lexer::tokenize() {
         case 'Y':
         case 'Z':
         case '_':
-            identifier_lexeme();
+            literal_lexeme();
             break;
         case '0':
         case '1':
@@ -248,18 +282,55 @@ void Lexer::string_lexeme() {
     }
 }
 
-/** Goes over and check that we do not fuck around with
+/** Checks if it's a quote
  *
  *
  *
  */
-void Lexer::char_lexeme() {}
+void Lexer::char_lexeme() {
+    add_token(TOKEN_QUOTE);
 
-// TODO: Check if identifier is keyword or not
-void Lexer::identifier_lexeme() {}
+    add_token(TOKEN_QUOTE);
+    advance();
+}
 
-void Lexer::number_lexeme() {}
-void Lexer::zeros() {}
+// TODO: Check if identifier is keyword or dtype
+void Lexer::literal_lexeme() { advance(); }
+
+/** integers, floats, hex and bits
+ *
+ */
+void Lexer::number_lexeme() {
+    if (peek() == '0')
+        zeros();
+}
+
+/** Zeros should be lexed carefully
+ *
+ */
+void Lexer::zeros() {
+    u32 startpos = this->cursor;
+
+    auto next = peek_neighbor();
+
+    if (next == '.') {
+        floats(startpos);
+    } else if (next == 'x') {
+        hexnumbers(startpos);
+    } else if (next == 'b') {
+        binarynumbers(startpos);
+    }
+
+    // if were e down here, they just have a lot of numbers
+    while (is_digit(*this->cursor_itr) && !end_of_file())
+        advance();
+}
+
+void Lexer::floats(u32 starting_position) {}
+
+void Lexer::hexnumbers(u32 starting_position) {}
+
+void Lexer::binarynumbers(u32 starting_position) {}
 
 // ===================================================
 //      ERRORS

@@ -64,6 +64,7 @@ typedef enum {
     TOKEN_PIPEGREATER,   // |>
     TOKEN_COLONCOLON,    //   ::
     TOKEN_EQUALARROW,    //   =>
+    TOKEN_DOT,           // .
     TOKEN_DOTDOT,        // .. range
     TOKEN_DOTDOTEQUAL,   // ..= inclusive range
     TOKEN_PLUSPLUS,      // ++ list and string concat
@@ -99,8 +100,9 @@ typedef enum {
     TOKEN_ENUM,          // enum
     TOKEN_STRUCT,        // struct
     TOKEN_ATOMIC,        // atomic before type marks it as an atomic!
-    TOKEN_COMPILETIME,   // Compiletime variables!
-    TOKEN_IN,            // in   TODO: Find out if we actually want this
+    TOKEN_PARALLEL, // parallel could be used in front of loops to parallelize
+    TOKEN_COMPILETIME, // Compiletime variables!
+    TOKEN_IN,          // in   TODO: Find out if we actually want this
 } TokenType;
 
 static const std::string nameTT[] = {
@@ -160,6 +162,7 @@ static const std::string nameTT[] = {
     "TOKEN_PIPEGREATER",
     "TOKEN_COLONCOLON",
     "TOKEN_EQUALARROW",
+    "TOKEN_DOT",
     "TOKEN_DOTDOT",
     "TOKEN_DOTDOTEQUAL",
     "TOKEN_PLUSPLUS",
@@ -195,6 +198,7 @@ static const std::string nameTT[] = {
     "TOKEN_ENUM",
     "TOKEN_STRUCT",
     "TOKEN_ATOMIC",
+    "TOKEN_PARALLEL",
     "TOKEN_COMPILETIME",
     "TOKEN_IN",
 };

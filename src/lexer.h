@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <ostream>
 #include <string_view>
@@ -13,7 +13,7 @@
 #include "pch.h"
 #include "token.h"
 
-const static std::map<std::string, TokenType> keywords = {
+const static std::unordered_map<std::string, TokenType> keywords = {
     {"if", TOKEN_IF},         {"then", TOKEN_THEN},
     {"while", TOKEN_WHILE},   {"elseif", TOKEN_ELSEIF},
     {"else", TOKEN_ELSE},     {"struct", TOKEN_STRUCT},
@@ -25,8 +25,7 @@ const static std::map<std::string, TokenType> keywords = {
     {"typeof", TOKEN_TYPEOF}, {"continue", TOKEN_CONTINUE},
     {"break", TOKEN_BREAK},   {"catch", TOKEN_CATCH},
     {"mut", TOKEN_MUT},       {"compiletime", TOKEN_COMPILETIME},
-    {"atomic", TOKEN_ATOMIC},
-};
+    {"atomic", TOKEN_ATOMIC}, {"parallel", TOKEN_PARALLEL}};
 
 [[maybe_unused]] const static std::array<std::string, 15>
     supported_number_datatypes = {"u8", "u16", "u32", "u64", "u128",
@@ -71,10 +70,18 @@ typedef struct Lexer {
         //  Methods for handling lexemes
         // ===============================
         void string_lexeme();
-        void identifier_lexeme();
+        void literal_lexeme();
         void char_lexeme();
         void number_lexeme();
+
+        // ====================
+        // More specific number handling
+        //===================
         void zeros();
+
+        void floats(u32 start_position);
+        void hexnumbers(u32 start_position);
+        void binarynumbers(u32 start_position);
 
         /** for symbols
          *
@@ -129,6 +136,13 @@ typedef struct Lexer {
         }
 
         bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+        bool is_bit(char c) { return c == '0' || c == '1'; }
+
+        bool is_hex(char c) {
+            return c >= '0' && c <= '9' && c >= 'a' && c <= 'f' ||
+                   c >= 'A' && c <= 'F';
+        }
 
         // TODO: Optimize with bits or something
         bool is_char(char c) {
