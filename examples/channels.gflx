@@ -1,0 +1,11 @@
+@import "std"
+@import "concurrency"
+
+
+
+main :: () -> 
+    
+    // Due to pipes, it's easy to chain operations for a channel
+    channel |> spawn() |> send() |> recv()
+
+end

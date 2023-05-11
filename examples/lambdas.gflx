@@ -1,0 +1,18 @@
+@import "std"
+
+
+// Return a function which creates a lambda 
+create_lambda :: () Fn(i32, i32) ->
+    return \x: i32,  y: i32 -> x + y end
+end
+
+main :: () ->
+    lambda_function: Fn(i32, i32) = create_lambda()
+
+    x: i32 = 5
+    y: i32 = 5
+
+    result = lambda_function(x, y)
+
+    print("Example of how lambdas can be created: {}\n", result)
+end

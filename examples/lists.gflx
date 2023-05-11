@@ -1,0 +1,19 @@
+@import "std"
+
+// sums up each pair, and returns the max of these two
+coolOperation :: (a: Array[i32]) i32 -> 
+    return a |> take(2) |> sum() |> getMax()
+end
+
+
+main :: () ->
+    // list from 0 to 19
+    list1: Array[i32] = [0..20]
+
+    // Or alternatively
+    list2: Array[i32] = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+
+    @assert(sum == 190)
+
+    print("Correct!\n")
+end

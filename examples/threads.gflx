@@ -1,0 +1,13 @@
+@import "std"
+@import "thread"
+
+
+main :: () -> 
+    
+    // Spawn threads
+    0..THREADS |> Thread.spawn({}, function, args)
+    
+    // Join all threads 
+    threads |> joinAll()
+
+end
