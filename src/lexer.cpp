@@ -279,6 +279,9 @@ bool Lexer::match(char expected_char) {
         return false;
 
     // TODO: This could segfault if we don't know the size of the file
+    // This goes for the next match aswell
+    // TODO: ALSO, match does not give us the right place for start of
+    // char_lexeme maybe add another int to keep track of lexeme start;
 
     // If the next char doesn't match, we keep looking
     if (*(this->cursor_itr + 1) != expected_char)
@@ -286,6 +289,26 @@ bool Lexer::match(char expected_char) {
 
     // Else, we want to advance one more time since we've already looked ahead
     advance();
+    return true;
+}
+
+bool Lexer::match_n(std::string expected_string) {
+    const size_t n = expected_string.size();
+    auto curr_itr = this->cursor_itr;
+
+    for (int i = 0; i < n; i++) {
+        if (*(curr_itr + i) != '\0')
+            return false;
+
+        if (*(cursor_itr + i) != expected_string[i])
+            return false;
+
+        ++curr_itr;
+    }
+
+    // If we matched on all, advance to next
+    for (int i = 0; i < n; i++)
+        advance();
     return true;
 }
 
@@ -309,7 +332,6 @@ void Lexer::string_lexeme() {
 }
 
 /** Checks if it's a quote
- *
  *
  *      FIXME: NOT A CHAR, exit and return error or something
  */

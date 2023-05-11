@@ -1,16 +1,16 @@
 #pragma once
 
+#include "pch.h"
+#include "token.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iostream>
-#include <unordered_map>
 #include <memory>
 #include <ostream>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
-#include "pch.h"
-#include "token.h"
 
 const static std::unordered_map<std::string, TokenType> keywords = {
     {"if", TOKEN_IF},         {"then", TOKEN_THEN},
@@ -62,7 +62,8 @@ typedef struct Lexer {
         void tokenize();
 
         // Specific tokenizers
-        bool match(char expected_char); // LOOKAHEAD
+        bool match(char expected_char);            // LOOKAHEAD
+        bool match_n(std::string expected_string); // LOOKAHEAD n times
 
         // ===============================
         //  Methods for handling lexemes
