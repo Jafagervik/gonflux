@@ -79,7 +79,9 @@ void Lexer::tokenize() {
             break;
 
         case '-':
-            if (match('=')) {
+            if (match('>')) {
+                add_token(TOKEN_ARROW);
+            } else if (match('=')) {
                 add_token(TOKEN_MINUSEQUAL);
             } else {
                 add_token(TOKEN_MINUS);
@@ -153,7 +155,15 @@ void Lexer::tokenize() {
             add_token(TOKEN_ATSIGN);
             break;
         case '.':
-            add_token(TOKEN_DOT);
+            if (match('.')) {
+                if (match('=')) {
+                    add_token(TOKEN_DOTDOTEQUAL);
+                } else {
+                    add_token(TOKEN_DOTDOT);
+                }
+            } else {
+                add_token(TOKEN_DOT);
+            }
             break;
         case ',':
             add_token(TOKEN_COMMA);

@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include "pch.h"
+#include "timer.h"
 
 typedef enum ReturnCode {
     Success = 0,
@@ -46,7 +47,9 @@ int main(int argc, char *argv[]) {
     // Lex
     auto lexer = Lexer(filename, payload);
 
-    lexer.tokenize();
+    TIMER(lexer.tokenize);
+
+    std::cout << "TIME: " << dur << "seconds\n";
 
     std::cout << lexer.token_list.size() << std::endl;
 

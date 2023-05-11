@@ -216,12 +216,12 @@ typedef enum LEXER_ERROR {
 } LEXER_ERROR;
 
 typedef struct Location {
-        uint32_t row;
-        uint32_t col;
+        u32 row;
+        u32 col;
         std::string_view source_file;
 
         friend std::ostream &operator<<(std::ostream &os, const Location &l) {
-            return os << "Row: " << l.row << " Col: " << l.col << " at file "
+            return os << "Line: " << l.row << " Col: " << l.col << " at file "
                       << l.source_file << '\n';
         }
 } Location;
@@ -242,11 +242,11 @@ typedef struct Token {
         }
 
         friend std::ostream &operator<<(std::ostream &os, const Token &t) {
-            os << "TType " << nameTT[t.type];
+            os << nameTT[t.type];
 
             // If we dont have text we dont output it, just the type
-            if (t.lexeme == nullptr) {
-                return os << " Location: " << t.location << '\n';
+            if (!t.lexeme) {
+                return os << " " << t.location << '\n';
             }
             return os << " Lexeme: " << t.lexeme << " Location: " << t.location
                       << '\n';
