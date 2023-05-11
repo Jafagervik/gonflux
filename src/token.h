@@ -108,6 +108,7 @@ typedef enum {
     TOKEN_IDENTIFIER, // name of function or variable _abcDEF123
     TOKEN_BOOL,       // true
     TOKEN_POINTER,    // Pointer[]
+    TOKEN_DATATYPE,   // NOTE: Could be removed
 } TokenType;
 
 static const std::string nameTT[] = {
@@ -208,6 +209,7 @@ static const std::string nameTT[] = {
     "TOKEN_IDENTIFIER",
     "TOKEN_BOOL",
     "TOKEN_POINTER",
+    "TOKEN_DATATYPE",
 };
 
 typedef enum LEXER_ERROR {
@@ -216,7 +218,7 @@ typedef enum LEXER_ERROR {
 } LEXER_ERROR;
 
 typedef struct Location {
-        u32 row;
+        u32 row = 1;
         u32 col;
         std::string_view source_file;
 
@@ -248,7 +250,7 @@ typedef struct Token {
             if (!t.lexeme) {
                 return os << " " << t.location << '\n';
             }
-            return os << " Lexeme: " << t.lexeme << " Location: " << t.location
+            return os << " Lexeme: " << *t.lexeme << " Location: " << t.location
                       << '\n';
         }
 } Token;

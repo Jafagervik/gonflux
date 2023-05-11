@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <iostream>
 #include <unordered_map>
 #include <memory>
@@ -27,10 +26,9 @@ const static std::unordered_map<std::string, TokenType> keywords = {
     {"mut", TOKEN_MUT},       {"compiletime", TOKEN_COMPILETIME},
     {"atomic", TOKEN_ATOMIC}, {"parallel", TOKEN_PARALLEL}};
 
-[[maybe_unused]] const static std::array<std::string, 15>
-    supported_number_datatypes = {"u8", "u16", "u32", "u64", "u128",
-                                  "i8", "i16", "i32", "i64", "i128",
-                                  "f8", "f16", "f32", "f64", "f128"};
+const static std::array<std::string, 15> supported_number_datatypes = {
+    "u8",  "u16",  "u32", "u64", "u128", "i8",  "i16", "i32",
+    "i64", "i128", "f8",  "f16", "f32",  "f64", "f128"};
 
 /** Struct contains impl for what what we're trying to achieve
  *
@@ -83,9 +81,6 @@ typedef struct Lexer {
         void hexnumbers(const std::vector<char>::iterator starting_position);
         void binarynumbers(const std::vector<char>::iterator starting_position);
 
-        /** for symbols
-         *
-         */
         void add_token(TokenType type) {
             auto location =
                 Location{.row = this->line,
@@ -114,10 +109,11 @@ typedef struct Lexer {
         }
 
         char peek_neighbor() {
+            // *(this->cursor_itr + 1)
             if (this->cursor_itr + 1 != this->data.end()) {
-                return '\0';
+                return *(this->cursor_itr + 1);
             }
-            return *this->cursor_itr;
+            return '\0';
         }
 
         // TODO: Possibly remove
@@ -131,8 +127,8 @@ typedef struct Lexer {
         bool end_of_file() { return this->cursor_itr == this->data.end(); }
 
         void advance() {
-            this->cursor_itr++;
-            this->cursor++;
+            ++this->cursor_itr;
+            ++this->cursor;
         }
 
         bool is_digit(char c) { return c >= '0' && c <= '9'; }
@@ -140,21 +136,23 @@ typedef struct Lexer {
         bool is_bit(char c) { return c == '0' || c == '1'; }
 
         bool is_hex(char c) {
-            return c >= '0' && c <= '9' && c >= 'a' && c <= 'f' ||
-                   c >= 'A' && c <= 'F';
+            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+                   (c >= 'A' && c <= 'F');
         }
 
         /** from the vector of chars or pointer, get
          *  us the substring telling us what the literal is
-         *
+         * TODO: see if this is inded correct
          */
         const std::string get_literal(const std::vector<char>::iterator start) {
-            return std::string(start, this->cursor_itr);
+            std::cout << *start << *this->cursor_itr << std::endl;
+            return std::string(start, this->cursor_itr + 1);
         }
 
         // TODO: Optimize with bits or something
         bool is_char(char c) {
-            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_';
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                   (c == '_');
         }
 
         bool is_alphanumeric(char c) { return is_digit(c) || is_char(c); }

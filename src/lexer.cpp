@@ -1,5 +1,6 @@
 #include "lexer.h"
-#include "token.h" // FIXME: REMOVE
+#include "constants.h"
+#include "token.h"
 #include <algorithm>
 
 /** function tokenize goes through the main file and creates tokens out
@@ -7,8 +8,9 @@
  *
  */
 void Lexer::tokenize() {
-    std::cout << "Starting tokenization ...\n";
+    std::cout << "\nStarting tokenization ...\n\n";
 
+    // TODO: add underscore?
     while (!end_of_file()) {
         const char current_byte = peek();
         switch (current_byte) {
@@ -100,7 +102,7 @@ void Lexer::tokenize() {
             } else if (match('=')) {
                 add_token(TOKEN_BITXOREQUAL);
             } else {
-                add_token(TOKEN_GREATER);
+                add_token(TOKEN_BITOR);
             }
             break;
 
@@ -117,6 +119,14 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITNOTEQUAL);
             } else {
                 add_token(TOKEN_BITNOT);
+            }
+            break;
+
+        case '^':
+            if (match('=')) {
+                add_token(TOKEN_BITXOREQUAL);
+            } else {
+                add_token(TOKEN_BITXOR);
             }
             break;
         case '>':
@@ -283,31 +293,72 @@ bool Lexer::match(char expected_char) {
 //      Special cases
 // ====================================
 void Lexer::string_lexeme() {
-    // TODO: Get substrig from  vector and save this as
-    // the string
-    u32 start = this->cursor;
-    while (peek() != '"' && !end_of_file()) {
-        if (peek() == '"') {
-            this->line++;
-            advance();
-        }
-    }
+    // TODO: Add multiline strings
+    u32 start_idx = this->cursor;
+    const auto start_itr = this->cursor_itr;
+
+    while (peek_neighbor() != '"')
+        advance();
+
+    auto literal = get_literal(start_itr);
+
+    add_token(TOKEN_STRING, literal);
+
+    // NOTE: This is here since we want to move away from end of string
+    advance();
 }
 
 /** Checks if it's a quote
  *
  *
- *
+ *      FIXME: NOT A CHAR, exit and return error or something
  */
 void Lexer::char_lexeme() {
-    add_token(TOKEN_QUOTE);
+    if (peek_n_ahead(2) == '\n') {
+        exit(420); //
+    }
 
     add_token(TOKEN_QUOTE);
     advance();
+    const auto start_itr = this->cursor_itr + 1;
+    const std::string literal = get_literal(start_itr);
+
+    // add_token(TOKEN_CHAR, std::string(1, peek()));
+    add_token(TOKEN_CHAR, literal);
+    advance();
+
+    add_token(TOKEN_QUOTE);
 }
 
-// TODO: Check if identifier is keyword or dtype
-void Lexer::literal_lexeme() { advance(); }
+void Lexer::literal_lexeme() {
+    u32 start_idx = this->cursor;
+    const auto start_itr = this->cursor_itr;
+
+    while (is_alphanumeric(peek_neighbor()))
+        advance();
+
+    const std::string literal = get_literal(start_itr);
+
+    // Check if it is a reserved keyword
+    auto search_keyword = keywords.find(literal);
+
+    if (search_keyword != keywords.end()) {
+        TokenType token = search_keyword->second;
+        add_token(token, literal);
+        return;
+    }
+
+    // Check if it is a datatype
+    auto found_datatype =
+        std::find(ALL_DATATYPES.begin(), ALL_DATATYPES.end(), literal);
+
+    if (found_datatype != ALL_DATATYPES.end()) {
+        add_token(TOKEN_DATATYPE, literal);
+        return;
+    }
+
+    add_token(TOKEN_IDENTIFIER, literal);
+}
 
 void Lexer::number_lexeme() {
     if (peek() == '0') {
@@ -318,10 +369,17 @@ void Lexer::number_lexeme() {
     // NOTE: Not a float, can still be a number
 
     const auto start_position_itr = this->cursor_itr;
-    const auto literal_start_idx = this->cursor;
+    const auto start_idx = this->cursor;
 
     while (is_digit(*this->cursor_itr) && !end_of_file())
         advance();
+
+    const std::string literal = get_literal(start_position_itr);
+
+    // float
+    if (literal.find('.') != std::string::npos) {
+        return;
+    }
 }
 
 void Lexer::zeros() {
@@ -332,10 +390,13 @@ void Lexer::zeros() {
     auto next = peek_neighbor();
 
     if (next == '.') {
+        advance(); // NOTE: Need to advance to next pos
         floats(starting_position);
-    } else if (next == 'x') {
+    } else if (next == 'x' or next == 'X') {
+        advance(); // NOTE: Same as above
         hexnumbers(starting_position);
-    } else if (next == 'b') {
+    } else if (next == 'b' || next == 'B') {
+        advance();
         binarynumbers(starting_position);
     }
 
@@ -349,7 +410,7 @@ void Lexer::zeros() {
 }
 
 void Lexer::floats(const std::vector<char>::iterator starting_position) {
-    while (is_digit(*this->cursor_itr) && !end_of_file())
+    while (is_digit(peek_neighbor()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
@@ -358,7 +419,7 @@ void Lexer::floats(const std::vector<char>::iterator starting_position) {
 }
 
 void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
-    while (is_hex(*this->cursor_itr) && !end_of_file())
+    while (is_hex(peek_neighbor()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
@@ -367,7 +428,7 @@ void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
 }
 
 void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
-    while (is_bit(*this->cursor_itr) && !end_of_file())
+    while (is_bit(peek_neighbor()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
@@ -379,7 +440,6 @@ void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
 //      ERRORS
 // ===================================================
 
-// TODO: In the future, come with corrections to user?
 void Lexer::throw_lexer_error(LEXER_ERROR error_code) {
     std::cerr << "Lexer error: " << error_code << " '" << *this->cursor_itr
               << "' found in line " << this->line
