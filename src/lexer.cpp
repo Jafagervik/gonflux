@@ -1,19 +1,15 @@
 #include "lexer.h"
-#include "constants.h"
-#include "token.h"
-#include <algorithm>
+#include <iterator>
 
 /** function tokenize goes through the main file and creates tokens out
  * of the ex
  *
  */
 void Lexer::tokenize() {
-    std::cout << "\nStarting tokenization ...\n\n";
+    std::cout << '\'' << "\nStarting tokenization ...\n\n";
 
-    // TODO: add underscore?
     while (!end_of_file()) {
-        const char current_byte = peek();
-        switch (current_byte) {
+        switch (peek()) {
         case '(':
             add_token(TOKEN_PARENTOPEN);
             break;
@@ -43,6 +39,11 @@ void Lexer::tokenize() {
         case '/':
             if (match('/')) { // Single line comment
                 while (peek() != '\n' && !end_of_file())
+                    advance();
+            } else if (match('*')) { // multiline comment
+                advance();
+                while (!end_of_file() && peek() != '*' &&
+                       peek_neighbor() != '/')
                     advance();
             } else if (match('=')) {
                 add_token(TOKEN_DIVIDEEQUAL);
@@ -156,13 +157,23 @@ void Lexer::tokenize() {
             }
             break;
         case '\'':
-            char_lexeme();
-            break;
+            if (char_lexeme()) {
+                break;
+            } else {
+                throw_lexer_error(UNTERMINATED_CHAR);
+                add_token(TOKEN_EOF); // NOTE: Early return
+                return;
+            }
         case '"':
             string_lexeme();
             break;
-        case '@': // Should only be used for import keyword thus far
-            add_token(TOKEN_ATSIGN);
+        case '@': // NOTE: KEYWORDS
+
+            if (match_n("import")) {
+                add_token(TOKEN_IMPORT, "import");
+            } else {
+                add_token(TOKEN_ATSIGN);
+            }
             break;
         case '.':
             if (match('.')) {
@@ -246,7 +257,7 @@ void Lexer::tokenize() {
         case '9':
             number_lexeme();
             break;
-        case ' ': // Spaces and so will only  iterate us forward
+        case ' ':
         case '\t':
         case '\r':
             break;
@@ -262,8 +273,8 @@ void Lexer::tokenize() {
     // End of file
     add_token(TOKEN_EOF);
 
-    // std::for_each(this->token_list.begin(), this->token_list.end(),
-    //               [](const auto &t) { std::cout << *t << '\n'; });
+    std::for_each(this->token_list.begin(), this->token_list.end(),
+                  [](const auto &t) { std::cout << *t << '\n'; });
 
     std::cout << "End of tokenization ...\n";
 }
@@ -273,7 +284,7 @@ void Lexer::tokenize() {
  * Will peak ahead one and see if that char matches
  * If so it advances the token once
  */
-bool Lexer::match(char expected_char) {
+bool Lexer::match(const char expected_char) {
     // If we're at the end, just stop
     if (end_of_file())
         return false;
@@ -287,23 +298,26 @@ bool Lexer::match(char expected_char) {
     if (*(this->cursor_itr + 1) != expected_char)
         return false;
 
-    // Else, we want to advance one more time since we've already looked ahead
+    // Else, we want to advance one more time since we've already looked
+    // ahead
     advance();
     return true;
 }
 
-bool Lexer::match_n(std::string expected_string) {
+bool Lexer::match_n(const std::string expected_string) {
     const size_t n = expected_string.size();
-    auto curr_itr = this->cursor_itr;
+    auto curr_itr = this->cursor_itr + 1;
 
     for (int i = 0; i < n; i++) {
-        if (*(curr_itr + i) != '\0')
+        if (*curr_itr == '\0') {
             return false;
+        }
 
-        if (*(cursor_itr + i) != expected_string[i])
+        if (*(curr_itr + i) != expected_string[i]) {
             return false;
+        }
 
-        ++curr_itr;
+        curr_itr++;
     }
 
     // If we matched on all, advance to next
@@ -316,13 +330,14 @@ bool Lexer::match_n(std::string expected_string) {
 //      Special cases
 // ====================================
 void Lexer::string_lexeme() {
-    // TODO: Add multiline strings
     u32 start_idx = this->cursor;
     const auto start_itr = this->cursor_itr;
 
-    while (peek_neighbor() != '"')
+    // NOTE: Works like multistring for now
+    while (peek_neighbor() != '"' && !end_of_file())
         advance();
 
+    // Plus one since we dont add the doublequote, knowing it's a string
     auto literal = get_literal(start_itr);
 
     add_token(TOKEN_STRING, literal);
@@ -333,23 +348,22 @@ void Lexer::string_lexeme() {
 
 /** Checks if it's a quote
  *
- *      FIXME: NOT A CHAR, exit and return error or something
  */
-void Lexer::char_lexeme() {
-    if (peek_n_ahead(2) == '\n') {
-        exit(420); //
+bool Lexer::char_lexeme() {
+    if (peek_n_ahead(2) == '\'' || peek_neighbor() == '\0') {
+        return false;
     }
 
-    add_token(TOKEN_QUOTE);
-    advance();
-    const auto start_itr = this->cursor_itr + 1;
-    const std::string literal = get_literal(start_itr);
-
-    // add_token(TOKEN_CHAR, std::string(1, peek()));
-    add_token(TOKEN_CHAR, literal);
+    // add_token(TOKEN_QUOTE);
     advance();
 
-    add_token(TOKEN_QUOTE);
+    add_token(TOKEN_CHAR, std::string(1, peek()));
+
+    advance();
+
+    // add_token(TOKEN_QUOTE);
+
+    return true;
 }
 
 void Lexer::literal_lexeme() {

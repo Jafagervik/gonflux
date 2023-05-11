@@ -29,10 +29,8 @@ int main(int argc, char *argv[]) {
 
     fill_byte_buffer(&payload, &file);
 
-    std::cout << "Number of chars: " << payload.size() << "\n\n";
-
-    // std::for_each(payload.begin(), payload.end(),
-    //             [](const char &c) { std::cout << c << ""; });
+    std::for_each(payload.begin(), payload.end(),
+                  [](const char &c) { std::cout << c << ""; });
 
     auto lexer = Lexer(args->filename, payload);
 

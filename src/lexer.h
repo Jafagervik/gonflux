@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.h"
 #include "pch.h"
 #include "token.h"
 #include <algorithm>
@@ -62,15 +63,15 @@ typedef struct Lexer {
         void tokenize();
 
         // Specific tokenizers
-        bool match(char expected_char);            // LOOKAHEAD
-        bool match_n(std::string expected_string); // LOOKAHEAD n times
+        bool match(const char expected_char);            // LOOKAHEAD
+        bool match_n(const std::string expected_string); // LOOKAHEAD n times
 
         // ===============================
         //  Methods for handling lexemes
         // ===============================
         void string_lexeme();
         void literal_lexeme();
-        void char_lexeme();
+        bool char_lexeme(); // Add bool to early stop if need be
         void number_lexeme();
 
         // ====================
@@ -110,7 +111,6 @@ typedef struct Lexer {
         }
 
         char peek_neighbor() {
-            // *(this->cursor_itr + 1)
             if (this->cursor_itr + 1 != this->data.end()) {
                 return *(this->cursor_itr + 1);
             }
@@ -146,8 +146,9 @@ typedef struct Lexer {
          * TODO: see if this is inded correct
          */
         const std::string get_literal(const std::vector<char>::iterator start) {
-            std::cout << *start << *this->cursor_itr << std::endl;
-            return std::string(start, this->cursor_itr + 1);
+            std::cout << "get literal Lexeme " << *start << *this->cursor_itr
+                      << std::endl;
+            return std::string(start, this->cursor_itr);
         }
 
         // TODO: Optimize with bits or something

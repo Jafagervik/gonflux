@@ -214,6 +214,7 @@ static const std::string nameTT[] = {
 
 typedef enum LEXER_ERROR {
     UNTERMINATED_STRING = 1,
+    UNTERMINATED_CHAR,
     UNKNOWN_CHARACTER
 } LEXER_ERROR;
 
@@ -247,10 +248,10 @@ typedef struct Token {
             os << nameTT[t.type];
 
             // If we dont have text we dont output it, just the type
-            if (!t.lexeme) {
+            if (!t.lexeme || t.lexeme == nullptr) {
                 return os << " " << t.location << '\n';
             }
-            return os << " Lexeme: " << *t.lexeme << " Location: " << t.location
+            return os << " Lexeme: " << t.lexeme << " Location: " << t.location
                       << '\n';
         }
 } Token;
