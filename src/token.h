@@ -94,6 +94,7 @@ typedef enum {
     TOKEN_STRUCT,        // struct
     TOKEN_ATOMIC,        // atomic before type marks it as an atomic!
     TOKEN_PARALLEL, // parallel could be used in front of loops to parallelize
+    TOKEN_VOLATILE,
     TOKEN_COMPILETIME, // Compiletime variables!
     TOKEN_IN,          // in   TODO: Find out if we actually want this
     // ==================
@@ -198,6 +199,7 @@ static const std::string nameTT[] = {
     "TOKEN_STRUCT",
     "TOKEN_ATOMIC",
     "TOKEN_PARALLEL",
+    "TOKEN_VOLATILE",
     "TOKEN_COMPILETIME",
     "TOKEN_IN",
     "TOKEN_HEX",

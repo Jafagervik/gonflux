@@ -1,12 +1,12 @@
 #include "lexer.h"
-#include <iterator>
+#include "token.h"
 
 /** function tokenize goes through the main file and creates tokens out
  * of the ex
  *
  */
 void Lexer::tokenize() {
-    std::cout << '\'' << "\nStarting tokenization ...\n\n";
+    std::cout << "\nStarting tokenization ...\n\n";
 
     while (!end_of_file()) {
         switch (peek()) {
@@ -34,7 +34,6 @@ void Lexer::tokenize() {
             } else {
                 add_token(TOKEN_COLON);
             }
-
             break;
         case '/':
             if (match('/')) { // Single line comment
@@ -52,7 +51,6 @@ void Lexer::tokenize() {
             }
             advance();
             break;
-
         case '*':
             if (match('=')) {
                 add_token(TOKEN_ASTERISKEQUAL);
@@ -61,7 +59,6 @@ void Lexer::tokenize() {
             }
             advance();
             break;
-
         case '=':
             if (match('=')) {
                 add_token(TOKEN_EQUALEQUAL);
@@ -189,80 +186,19 @@ void Lexer::tokenize() {
         case ',':
             add_token(TOKEN_COMMA);
             break;
-        // Characters
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'i':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'n':
-        case 'o':
-        case 'p':
-        case 'q':
-        case 'r':
-        case 's':
-        case 't':
-        case 'u':
-        case 'v':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
-        case 'G':
-        case 'H':
-        case 'I':
-        case 'J':
-        case 'K':
-        case 'L':
-        case 'M':
-        case 'N':
-        case 'O':
-        case 'P':
-        case 'Q':
-        case 'R':
-        case 'S':
-        case 'T':
-        case 'U':
-        case 'V':
-        case 'W':
-        case 'X':
-        case 'Y':
-        case 'Z':
-        case '_':
-            literal_lexeme();
-            break;
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            number_lexeme();
-            break;
-        case ' ':
+        case ' ': // Spaces will be skipped
         case '\t':
         case '\r':
             break;
-        default: // Give an error since we could not
-            throw_lexer_error(UNKNOWN_CHARACTER);
+        default:
+            if (is_char(peek())) {
+                literal_lexeme();
+            } else if (is_digit(peek())) {
+                number_lexeme();
+            } else {
+                // Give an error since we could not
+                throw_lexer_error(UNKNOWN_CHARACTER);
+            }
             break;
         }
 
@@ -289,8 +225,6 @@ bool Lexer::match(const char expected_char) {
     if (end_of_file())
         return false;
 
-    // TODO: This could segfault if we don't know the size of the file
-    // This goes for the next match aswell
     // TODO: ALSO, match does not give us the right place for start of
     // char_lexeme maybe add another int to keep track of lexeme start;
 
@@ -334,16 +268,24 @@ void Lexer::string_lexeme() {
     const auto start_itr = this->cursor_itr;
 
     // NOTE: Works like multistring for now
-    while (peek_neighbor() != '"' && !end_of_file())
+    while (peek() != '"' && !end_of_file()) {
+        if (peek() == '\n') {
+            this->line++;
+            this->beginning_of_line = 0;
+        }
         advance();
+    }
 
-    // Plus one since we dont add the doublequote, knowing it's a string
+    if (end_of_file()) {
+        throw_lexer_error(UNTERMINATED_STRING);
+    }
+
+    advance();
+
+    //  TODO: start + 1 to remove  quote, end - 1 for the same reason
     auto literal = get_literal(start_itr);
 
     add_token(TOKEN_STRING, literal);
-
-    // NOTE: This is here since we want to move away from end of string
-    advance();
 }
 
 /** Checks if it's a quote
@@ -351,17 +293,15 @@ void Lexer::string_lexeme() {
  */
 bool Lexer::char_lexeme() {
     if (peek_n_ahead(2) == '\'' || peek_neighbor() == '\0') {
+        throw_lexer_error(UNTERMINATED_CHAR);
         return false;
     }
 
-    // add_token(TOKEN_QUOTE);
-    advance();
+    advance(); // to go the char
 
     add_token(TOKEN_CHAR, std::string(1, peek()));
 
-    advance();
-
-    // add_token(TOKEN_QUOTE);
+    advance(); // closing '
 
     return true;
 }
@@ -370,7 +310,7 @@ void Lexer::literal_lexeme() {
     u32 start_idx = this->cursor;
     const auto start_itr = this->cursor_itr;
 
-    while (is_alphanumeric(peek_neighbor()))
+    while (is_alphanumeric(peek()))
         advance();
 
     const std::string literal = get_literal(start_itr);

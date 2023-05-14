@@ -11,23 +11,40 @@
 #include <ostream>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 const static std::unordered_map<std::string, TokenType> keywords = {
-    {"if", TOKEN_IF},         {"then", TOKEN_THEN},
-    {"while", TOKEN_WHILE},   {"elseif", TOKEN_ELSEIF},
-    {"else", TOKEN_ELSE},     {"struct", TOKEN_STRUCT},
-    {"enum", TOKEN_ENUM},     {"return", TOKEN_RETURN},
-    {"end", TOKEN_END},       {"import", TOKEN_IMPORT},
-    {"export", TOKEN_EXPORT}, {"null", TOKEN_NULL},
-    {"in", TOKEN_IN},         {"throw", TOKEN_THROW},
-    {"type", TOKEN_TYPE},     {"try", TOKEN_TRY},
-    {"typeof", TOKEN_TYPEOF}, {"continue", TOKEN_CONTINUE},
-    {"break", TOKEN_BREAK},   {"catch", TOKEN_CATCH},
-    {"mut", TOKEN_MUT},       {"compiletime", TOKEN_COMPILETIME},
-    {"atomic", TOKEN_ATOMIC}, {"parallel", TOKEN_PARALLEL}};
+    {"if", TOKEN_IF},
+    {"then", TOKEN_THEN},
+    {"while", TOKEN_WHILE},
+    {"elseif", TOKEN_ELSEIF},
+    {"else", TOKEN_ELSE},
+    {"struct", TOKEN_STRUCT},
+    {"enum", TOKEN_ENUM},
+    {"return", TOKEN_RETURN},
+    {"end", TOKEN_END},
+    {"import", TOKEN_IMPORT},
+    {"export", TOKEN_EXPORT},
+    {"null", TOKEN_NULL},
+    {"in", TOKEN_IN},
+    {"throw", TOKEN_THROW},
+    {"type", TOKEN_TYPE},
+    {"try", TOKEN_TRY},
+    {"typeof", TOKEN_TYPEOF},
+    {"continue", TOKEN_CONTINUE},
+    {"break", TOKEN_BREAK},
+    {"catch", TOKEN_CATCH},
+    {"mut", TOKEN_MUT},
+    {"compiletime", TOKEN_COMPILETIME},
+    {"atomic", TOKEN_ATOMIC},
+    {"parallel", TOKEN_PARALLEL},
+    {"volatile", TOKEN_VOLATILE}};
 
-const static std::array<std::string, 15> supported_number_datatypes = {
+const static std::unordered_map<std::string, TokenType> specials = {
+    {"import", TOKEN_IMPORT}, {"parallel", TOKEN_PARALLEL}};
+
+const static std::unordered_set<std::string> supported_number_datatypes = {
     "u8",  "u16",  "u32", "u64", "u128", "i8",  "i16", "i32",
     "i64", "i128", "f8",  "f16", "f32",  "f64", "f128"};
 
@@ -36,20 +53,20 @@ const static std::array<std::string, 15> supported_number_datatypes = {
  */
 typedef struct Lexer {
         // TODO: Add more files when dealing with
-        //
         std::string source_file;
         std::vector<char> data;
         std::vector<std::unique_ptr<Token>> token_list;
 
-        u32 cursor;            // Where we're at in the iterator
-        u32 beginning_of_line; // Set to 0 each \n
-        u32 line;              // Incremented each \n
+        u32 cursor;               // Where we're at in the iterator
+        u32 beginning_of_line;    // Set to 0 each \n
+        u32 beginning_of_literal; // needed for longer names to get accurate
+                                  // starting point
+        u32 line;                 // Incremented each \n
         std::vector<char>::iterator cursor_itr;
 
-        // Construtor
         Lexer(std::string source_file, std::vector<char> data)
             : source_file{source_file}, data{data}, cursor{0},
-              beginning_of_line{0}, line{0} {
+              beginning_of_literal{0}, beginning_of_line{0}, line{0} {
             // Alternative to cursor
             this->cursor_itr = this->data.begin();
 
@@ -59,7 +76,6 @@ typedef struct Lexer {
             token_list.reserve(2000);
         }
 
-        // Main function that tokenizes
         void tokenize();
 
         // Specific tokenizers
@@ -71,7 +87,7 @@ typedef struct Lexer {
         // ===============================
         void string_lexeme();
         void literal_lexeme();
-        bool char_lexeme(); // Add bool to early stop if need be
+        bool char_lexeme();
         void number_lexeme();
 
         // ====================
@@ -132,11 +148,11 @@ typedef struct Lexer {
             ++this->cursor;
         }
 
-        bool is_digit(char c) { return c >= '0' && c <= '9'; }
+        bool is_digit(const char c) { return c >= '0' && c <= '9'; }
 
-        bool is_bit(char c) { return c == '0' || c == '1'; }
+        bool is_bit(const char c) { return c == '0' || c == '1'; }
 
-        bool is_hex(char c) {
+        bool is_hex(const char c) {
             return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
                    (c >= 'A' && c <= 'F');
         }
@@ -151,7 +167,6 @@ typedef struct Lexer {
             return std::string(start, this->cursor_itr);
         }
 
-        // TODO: Optimize with bits or something
         bool is_char(char c) {
             return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
                    (c == '_');
