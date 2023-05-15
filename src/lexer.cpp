@@ -117,7 +117,6 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITNOT);
             }
             break;
-
         case '^':
             if (match('=')) {
                 add_token(TOKEN_BITXOREQUAL);
@@ -163,15 +162,19 @@ void Lexer::tokenize() {
         case '"':
             if (!match('"')) { // Inverted logic since this happens most times
                 string_lexeme();
-                break;
-            }
-            add_token(TOKEN_STRING, ""); // Add empty string
-            break;
-        case '@': // NOTE: KEYWORDS
-            if (match_n("import")) {
-                add_token(TOKEN_IMPORT, "import");
             } else {
+                add_token(TOKEN_STRING, ""); // Add empty string
+            }
+            break;
+        case '@':
+            if (!is_char(peek_neighbor())) {
                 add_token(TOKEN_ATSIGN);
+            } else {
+                if (!builtin_lexeme()) {
+                    throw_lexer_error(BUILTIN_NOT_FOUND);
+                    add_token(TOKEN_EOF); // NOTE: Early return
+                    return;
+                }
             }
             break;
         case '.':
@@ -311,6 +314,33 @@ void Lexer::char_lexeme() {
     add_token(TOKEN_CHAR, c);
 
     advance(); // closing '
+}
+
+bool Lexer::builtin_lexeme() {
+    advance(); // Start of identifier
+
+    bool found_builtin = false;
+
+    u32 start_idx = this->cursor;
+    const auto start_itr = this->cursor_itr;
+
+    while (is_alphanumeric(peek()))
+        advance();
+
+    const std::string literal = get_literal(start_itr);
+
+    PRINT(literal);
+
+    // Check if it is a reserved keyword
+    const auto search_builtins = builtin_keywords.find(literal);
+
+    if (search_builtins != builtin_keywords.end()) {
+        TokenType token = search_builtins->second;
+        add_token(token, literal, start_idx);
+        found_builtin = true;
+    }
+
+    return found_builtin;
 }
 
 void Lexer::literal_lexeme() {
