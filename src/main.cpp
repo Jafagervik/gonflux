@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <string_view>
-#include <utility>
 #include <vector>
 
 #include "args.h"
@@ -14,7 +12,7 @@
 #include "pch.h"
 #include "timer.h"
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
     const auto args = std::make_unique<ArgsParser>(ArgsParser(argc, argv));
 
     u32 status = args->parse_args();

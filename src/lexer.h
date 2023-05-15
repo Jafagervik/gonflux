@@ -106,9 +106,9 @@ typedef struct Lexer {
             return std::string(start, end);
         }
 
-        char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
+        const char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
 
-        char peek_next() {
+        const char peek_next() {
             if (this->cursor_itr + 1 != this->data.end()) {
                 return *(this->cursor_itr + 1);
             }
@@ -122,7 +122,9 @@ typedef struct Lexer {
             return '\0';
         }
 
-        bool end_of_file() { return this->cursor_itr == this->data.end(); }
+        inline bool end_of_file() {
+            return this->cursor_itr == this->data.end();
+        }
 
         void advance() {
             ++this->cursor_itr;

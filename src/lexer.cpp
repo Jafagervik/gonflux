@@ -80,7 +80,6 @@ void Lexer::tokenize() {
             } else {
                 add_token(TOKEN_MINUS);
             }
-            advance();
             break;
         case '\n': // This is what happens when we go to a new line
             new_line();
@@ -296,7 +295,7 @@ void Lexer::string_lexeme() {
  *  Simply using `exit` would not clean up memory in an effective manner
  */
 void Lexer::char_lexeme() {
-    advance(); // to go the char
+    advance(); // Go the char
 
     const std::string c = std::string(1, peek());
 
@@ -362,13 +361,7 @@ void Lexer::literal_lexeme() {
     add_token(TOKEN_IDENTIFIER, literal);
 }
 
-void Lexer::number_lexeme() {
-    if (peek() == '0') {
-        zeros();
-    } else {
-        number_internal();
-    }
-}
+void Lexer::number_lexeme() { peek() == '0' ? zeros() : number_internal(); }
 
 void Lexer::zeros() {
     const char next = peek_next();
@@ -379,7 +372,7 @@ void Lexer::zeros() {
         binary_numbers();
     } else if (std::tolower(next) == 'o') {
         octal_numbers();
-    } else if (is_digit(next)) {
+    } else if (is_digit(next) || next == '.') {
         // If not a special case of numbers, just parse it as
         // a case of integer or floating point number
         number_internal();
@@ -399,14 +392,18 @@ void Lexer::octal_numbers() { special_number_internal(TOKEN_OCTAL, is_octal); }
 void Lexer::special_number_internal(TokenType token_type,
                                     std::function<bool(char)> filter) {
     const auto starting_position = this->cursor_itr;
-    const auto literal_start_idx = this->cursor;
+    const auto literal_start_idx =
+        this->cursor; // NOTE: Use this for correct column
+
+    advance(); // Go to symbol
+    advance(); // Go to first number
 
     while (filter(peek()) && !end_of_file())
         advance();
 
     const auto literal = get_literal(starting_position);
 
-    PRINT(literal);
+    // PRINT(literal);
 
     add_token(token_type, literal);
 }
@@ -436,7 +433,7 @@ void Lexer::number_internal() {
 
     const auto literal = get_literal(start_position_itr);
 
-    PRINT(literal);
+    // PRINT(literal);
 
     const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
 
