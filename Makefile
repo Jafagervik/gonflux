@@ -6,6 +6,9 @@ all:
 tests: 
 	cd build && cmake .. && make tests && ./tests 
 
+comments: 
+	cd build && cmake .. && make flux && ./flux ./comments.gflx 
+
 builtin: 
 	cd build && cmake .. && make flux && ./flux ./builtin.gflx 
 
