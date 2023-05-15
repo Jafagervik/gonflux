@@ -103,6 +103,7 @@ typedef enum {
     TOKEN_HEX,
     TOKEN_OCTAL,
     TOKEN_BIT,
+    TOKEN_MATH_E,
     TOKEN_INTEGER,    // 4
     TOKEN_FLOAT,      // 3.23
     TOKEN_STRING,     // "sfdg"
@@ -206,6 +207,7 @@ static const std::string nameTT[] = {
     "TOKEN_HEX",
     "TOKEN_OCTAL",
     "TOKEN_BIT",
+    "TOKEN_MATH_E",
     "TOKEN_INTEGER",
     "TOKEN_FLOAT",
     "TOKEN_STRING",
