@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "token.h"
 
 void Lexer::tokenize() {
     while (!end_of_file()) {
@@ -366,34 +367,17 @@ void Lexer::literal_lexeme() {
 void Lexer::number_lexeme() {
     if (peek() == '0') {
         zeros();
-        return;
-    }
-
-    // NOTE: Not a float, can still be a number
-
-    const auto start_position_itr = this->cursor_itr;
-    const auto start_idx = this->cursor;
-
-    while (is_digit(peek()) && !end_of_file())
-        advance();
-
-    const std::string literal = get_literal(start_position_itr);
-
-    // TODO: handle float in this case
-    if (literal.find('.') != std::string::npos) {
-        return;
+    } else {
+        number_internal();
     }
 }
 
-// TODO: Implement
 void Lexer::zeros() {
     // We need to pass this on down the states to iterate
     const auto starting_position = this->cursor_itr;
     const auto literal_start_idx = this->cursor;
 
-    if (match('.')) {
-        floats(starting_position);
-    } else if (match('x') || match('X')) {
+    if (match('x') || match('X')) {
         hex_numbers(starting_position);
     } else if (match('b') || match('B')) {
         binary_numbers(starting_position);
@@ -401,22 +385,9 @@ void Lexer::zeros() {
         octal_numbers(starting_position);
     }
 
-    // if were e down here, they just have a lot of numbers
-    while (is_digit(peek()) && !end_of_file())
-        advance();
-
-    const auto literal = get_literal(starting_position);
-
-    add_token(TOKEN_INTEGER, literal);
-}
-
-void Lexer::floats(const char_iter starting_position) {
-    while (is_digit(peek()) && !end_of_file())
-        advance();
-
-    const auto literal = get_literal(starting_position);
-
-    add_token(TOKEN_FLOAT, literal);
+    // If not a special case of numbers, just parse it as
+    // a case of integer or floating point number
+    number_internal();
 }
 
 void Lexer::hex_numbers(const char_iter starting_position) {
@@ -424,6 +395,8 @@ void Lexer::hex_numbers(const char_iter starting_position) {
         advance();
 
     const auto literal = get_literal(starting_position);
+
+    PRINT(literal);
 
     add_token(TOKEN_HEX, literal);
 }
@@ -434,6 +407,8 @@ void Lexer::binary_numbers(const char_iter starting_position) {
 
     const auto literal = get_literal(starting_position);
 
+    PRINT(literal);
+
     add_token(TOKEN_BIT, literal);
 }
 
@@ -443,7 +418,41 @@ void Lexer::octal_numbers(const char_iter starting_position) {
 
     const auto literal = get_literal(starting_position);
 
+    PRINT(literal);
+
     add_token(TOKEN_OCTAL, literal);
+}
+
+/** function number internal
+ *
+ *  This function handles each case where we can only
+ *  have a normal int or float number.
+ *  Since we can have different number types,
+ *
+ */
+void Lexer::number_internal() {
+    const auto start_position_itr = this->cursor_itr;
+    const auto start_idx = this->cursor;
+    bool is_float = false;
+
+    while (is_digit(peek()) && !end_of_file())
+        advance();
+
+    if (peek() == '.' && is_digit(peek_next())) {
+        is_float = true;
+        advance();
+
+        while (is_digit(peek()) && !end_of_file())
+            advance();
+    }
+
+    const auto literal = get_literal(start_position_itr);
+
+    PRINT(literal);
+
+    const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
+
+    add_token(token, literal);
 }
 
 // ===================================================

@@ -60,6 +60,8 @@ typedef struct Lexer {
         void binary_numbers(const char_iter starting_position);
         void octal_numbers(const char_iter starting_position);
 
+        void number_internal();
+
         // ===============================
         //   Helper methods
         // ===============================
