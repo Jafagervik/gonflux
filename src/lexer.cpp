@@ -1,11 +1,5 @@
 #include "lexer.h"
-#include "constants.h"
-#include "token.h"
 
-/** function tokenize goes through the main file and creates tokens out
- * of the ex
- *
- */
 void Lexer::tokenize() {
     while (!end_of_file()) {
         const auto curr_sym = peek();
@@ -37,12 +31,11 @@ void Lexer::tokenize() {
             break;
         case '/':
             if (match('/')) { // Single line comment
-                while (peek_neighbor() != '\n' && !end_of_file())
+                while (peek_next() != '\n' && !end_of_file())
                     advance();
             } else if (match('*')) { // FIXME: multiline comment
                 advance();
-                while (!end_of_file() && peek() != '*' &&
-                       peek_neighbor() != '/')
+                while (!end_of_file() && peek() != '*' && peek_next() != '/')
                     advance();
             } else if (match('=')) {
                 add_token(TOKEN_DIVIDEEQUAL);
@@ -78,6 +71,7 @@ void Lexer::tokenize() {
             advance();
             break;
 
+            // NOTE: Floats will be handled in the parser, not here
         case '-':
             if (match('>')) {
                 add_token(TOKEN_ARROW);
@@ -167,7 +161,7 @@ void Lexer::tokenize() {
             }
             break;
         case '@':
-            if (!is_char(peek_neighbor())) {
+            if (!is_char(peek_next())) {
                 add_token(TOKEN_ATSIGN);
             } else {
                 if (!builtin_lexeme()) {
@@ -209,9 +203,6 @@ void Lexer::tokenize() {
 
     // End of file
     add_token(TOKEN_EOF);
-
-    std::for_each(this->token_list.begin(), this->token_list.end(),
-                  [](const auto &t) { std::cout << *t << '\n'; });
 }
 
 /** function match
@@ -329,8 +320,6 @@ bool Lexer::builtin_lexeme() {
 
     const std::string literal = get_literal(start_itr);
 
-    PRINT(literal);
-
     // Check if it is a reserved keyword
     const auto search_builtins = builtin_keywords.find(literal);
 
@@ -396,58 +385,65 @@ void Lexer::number_lexeme() {
     }
 }
 
+// TODO: Implement
 void Lexer::zeros() {
     // We need to pass this on down the states to iterate
     const auto starting_position = this->cursor_itr;
     const auto literal_start_idx = this->cursor;
 
-    auto next = peek_neighbor();
-
-    if (next == '.') {
-        advance();
+    if (match('.')) {
         floats(starting_position);
-    } else if (next == 'x' or next == 'X') {
-        advance();
-        hexnumbers(starting_position);
-    } else if (next == 'b' || next == 'B') {
-        advance();
-        binarynumbers(starting_position);
+    } else if (match('x') || match('X')) {
+        hex_numbers(starting_position);
+    } else if (match('b') || match('B')) {
+        binary_numbers(starting_position);
+    } else if (match('o') || match('O')) {
+        octal_numbers(starting_position);
     }
 
     // if were e down here, they just have a lot of numbers
-    while (is_digit(*this->cursor_itr) && !end_of_file())
+    while (is_digit(peek()) && !end_of_file())
         advance();
 
-    const std::string literal = get_literal(starting_position);
+    const auto literal = get_literal(starting_position);
 
     add_token(TOKEN_INTEGER, literal);
 }
 
-void Lexer::floats(const std::vector<char>::iterator starting_position) {
+void Lexer::floats(const char_iter starting_position) {
     while (is_digit(peek()) && !end_of_file())
         advance();
 
-    const std::string literal = get_literal(starting_position);
+    const auto literal = get_literal(starting_position);
 
     add_token(TOKEN_FLOAT, literal);
 }
 
-void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
+void Lexer::hex_numbers(const char_iter starting_position) {
     while (is_hex(peek()) && !end_of_file())
         advance();
 
-    const std::string literal = get_literal(starting_position);
+    const auto literal = get_literal(starting_position);
 
     add_token(TOKEN_HEX, literal);
 }
 
-void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
+void Lexer::binary_numbers(const char_iter starting_position) {
     while (is_bit(peek()) && !end_of_file())
         advance();
 
-    const std::string literal = get_literal(starting_position);
+    const auto literal = get_literal(starting_position);
 
     add_token(TOKEN_BIT, literal);
+}
+
+void Lexer::octal_numbers(const char_iter starting_position) {
+    while (is_octal(peek()) && !end_of_file())
+        advance();
+
+    const auto literal = get_literal(starting_position);
+
+    add_token(TOKEN_OCTAL, literal);
 }
 
 // ===================================================

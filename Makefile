@@ -3,8 +3,14 @@
 all: 
 	cd build && cmake .. && make
 
+run: 
+	cd build && cmake .. && make flux && ./flux ./main.gflx 
+
 tests: 
 	cd build && cmake .. && make tests && ./tests 
+
+numbers: 
+	cd build && cmake .. && make flux && ./flux ./numbers.gflx 
 
 comments: 
 	cd build && cmake .. && make flux && ./flux ./comments.gflx 

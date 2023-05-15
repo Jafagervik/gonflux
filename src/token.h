@@ -101,6 +101,7 @@ typedef enum {
     //   Dtypes
     // ===================
     TOKEN_HEX,
+    TOKEN_OCTAL,
     TOKEN_BIT,
     TOKEN_INTEGER,    // 4
     TOKEN_FLOAT,      // 3.23
@@ -203,6 +204,7 @@ static const std::string nameTT[] = {
     "TOKEN_COMPILETIME",
     "TOKEN_IN",
     "TOKEN_HEX",
+    "TOKEN_OCTAL",
     "TOKEN_BIT",
     "TOKEN_INTEGER",
     "TOKEN_FLOAT",

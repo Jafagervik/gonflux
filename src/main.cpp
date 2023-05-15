@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     if (status != 0)
         return status;
 
-    std::cout << args->filename << std::endl;
+    // std::cout << args->filename << std::endl;
 
     std::ifstream file(args->filename, std::ios::binary);
 
@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
 
     TIMER(lexer.tokenize);
 
-    std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
+    // std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
 
     // TODO: Tokenlist should be turned into iterator
-    // std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
-    //               [](const auto &t) { std::cout << *t << ' '; });
+    std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
+                  [](const auto &t) { std::cout << *t << ' '; });
 
     file.close();
 

@@ -28,9 +28,9 @@ find_package(Catch2 3 REQUIRED)
 add_executable(tests test/lexer_test.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
-#set (CMAKE_CXX_FLAGS "-o2")
-
-# target_compile_options(./build/flux PRIVATE -o3)
 
 # name of executable would be flux 
 add_executable(flux src/main.cpp src/lexer.cpp src/ast.cpp src/parser.cpp src/cache.cpp)
+
+# target_compile_options(./build/flux PRIVATE -o3)
+add_compile_options(-O2)
