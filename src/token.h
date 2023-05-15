@@ -222,12 +222,14 @@ typedef enum LEXER_ERROR {
     UNKNOWN_CHARACTER,
     INVALID_CHAR,
     INVALID_FLOAT,
+    INVALID_NUMBER,
     BUILTIN_NOT_FOUND,
 } LEXER_ERROR;
 
-static const std::string nameLE[] = {
-    "UNTERMINATED_STRING", "UNTERMINATED_CHAR", "UNKNOWN_CHARACTER",
-    "INVALID_CHAR",        "INVALID_FLOAT",     "BUILTIN_NOT_FOUND"};
+static const std::string nameLE[] = {"UNTERMINATED_STRING", "UNTERMINATED_CHAR",
+                                     "UNKNOWN_CHARACTER",   "INVALID_CHAR",
+                                     "INVALID_FLOAT",       "INVALID_NUMBER",
+                                     "BUILTIN_NOT_FOUND"};
 
 typedef struct Location {
         u16 row = 1;

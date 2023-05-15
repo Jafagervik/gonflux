@@ -1,5 +1,5 @@
 #include "lexer.h"
-#include "token.h"
+#include "helpers.h"
 
 void Lexer::tokenize() {
     while (!end_of_file()) {
@@ -43,7 +43,7 @@ void Lexer::tokenize() {
             } else {
                 add_token(TOKEN_DIVIDE);
             }
-            advance();
+            // advance(); NOTE: do we need advance here really?
             break;
         case '*':
             if (match('=')) {
@@ -71,8 +71,7 @@ void Lexer::tokenize() {
             }
             advance();
             break;
-
-            // NOTE: Floats will be handled in the parser, not here
+        // NOTE: Floats will be handled in the parser, not here
         case '-':
             if (match('>')) {
                 add_token(TOKEN_ARROW);
@@ -86,7 +85,6 @@ void Lexer::tokenize() {
         case '\n': // This is what happens when we go to a new line
             new_line();
             break;
-
         case '|':
             if (match('>')) {
                 add_token(TOKEN_PIPEGREATER);
@@ -96,7 +94,6 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITOR);
             }
             break;
-
         case '&':
             if (match('=')) {
                 add_token(TOKEN_BITANDEQUAL);
@@ -104,7 +101,6 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITAND);
             }
             break;
-
         case '~':
             if (match('=')) {
                 add_token(TOKEN_BITNOTEQUAL);
@@ -165,7 +161,8 @@ void Lexer::tokenize() {
             if (!is_char(peek_next())) {
                 add_token(TOKEN_ATSIGN);
             } else {
-                if (!builtin_lexeme()) {
+                if (!builtin_lexeme()) { // NOTE: Coding style differs from
+                                         // elsewhere
                     throw_lexer_error(BUILTIN_NOT_FOUND);
                     add_token(TOKEN_EOF); // NOTE: Early return
                     return;
@@ -352,6 +349,7 @@ void Lexer::literal_lexeme() {
     }
 
     // Check if it is a datatype
+    // TODO: Discuss if datatype could just be an identifier as well
     const auto found_datatype = ALL_DATATYPES.find(literal);
 
     if (found_datatype != ALL_DATATYPES.end()) {
@@ -373,54 +371,44 @@ void Lexer::number_lexeme() {
 }
 
 void Lexer::zeros() {
-    // We need to pass this on down the states to iterate
+    const char next = peek_next();
+
+    if (std::tolower(next) == 'x') {
+        hex_numbers();
+    } else if (std::tolower(next) == 'b') {
+        binary_numbers();
+    } else if (std::tolower(next) == 'o') {
+        octal_numbers();
+    } else if (is_digit(next)) {
+        // If not a special case of numbers, just parse it as
+        // a case of integer or floating point number
+        number_internal();
+    } else {
+        throw_lexer_error(INVALID_NUMBER);
+        return; // TODO: Break out of loop
+    }
+}
+
+void Lexer::hex_numbers() { special_number_internal(TOKEN_HEX, is_hex); }
+
+void Lexer::binary_numbers() { special_number_internal(TOKEN_BIT, is_bit); }
+
+void Lexer::octal_numbers() { special_number_internal(TOKEN_OCTAL, is_octal); }
+
+// NOTE: Interal helper for special numbers
+void Lexer::special_number_internal(TokenType token_type,
+                                    std::function<bool(char)> filter) {
     const auto starting_position = this->cursor_itr;
     const auto literal_start_idx = this->cursor;
 
-    if (match('x') || match('X')) {
-        hex_numbers(starting_position);
-    } else if (match('b') || match('B')) {
-        binary_numbers(starting_position);
-    } else if (match('o') || match('O')) {
-        octal_numbers(starting_position);
-    }
-
-    // If not a special case of numbers, just parse it as
-    // a case of integer or floating point number
-    number_internal();
-}
-
-void Lexer::hex_numbers(const char_iter starting_position) {
-    while (is_hex(peek()) && !end_of_file())
+    while (filter(peek()) && !end_of_file())
         advance();
 
     const auto literal = get_literal(starting_position);
 
     PRINT(literal);
 
-    add_token(TOKEN_HEX, literal);
-}
-
-void Lexer::binary_numbers(const char_iter starting_position) {
-    while (is_bit(peek()) && !end_of_file())
-        advance();
-
-    const auto literal = get_literal(starting_position);
-
-    PRINT(literal);
-
-    add_token(TOKEN_BIT, literal);
-}
-
-void Lexer::octal_numbers(const char_iter starting_position) {
-    while (is_octal(peek()) && !end_of_file())
-        advance();
-
-    const auto literal = get_literal(starting_position);
-
-    PRINT(literal);
-
-    add_token(TOKEN_OCTAL, literal);
+    add_token(token_type, literal);
 }
 
 /** function number internal

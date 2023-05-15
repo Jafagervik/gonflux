@@ -5,6 +5,7 @@
 #include "token.h"
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <ostream>
@@ -55,11 +56,12 @@ typedef struct Lexer {
         // More specific number handling
         //=============================================================
         void zeros();
-        void floats(const char_iter starting_position);
-        void hex_numbers(const char_iter starting_position);
-        void binary_numbers(const char_iter starting_position);
-        void octal_numbers(const char_iter starting_position);
+        void hex_numbers();
+        void binary_numbers();
+        void octal_numbers();
 
+        void special_number_internal(TokenType token_type,
+                                     std::function<bool(char)> filter);
         void number_internal();
 
         // ===============================
@@ -126,24 +128,6 @@ typedef struct Lexer {
             ++this->cursor_itr;
             ++this->cursor;
         }
-
-        bool is_digit(const char c) { return c >= '0' && c <= '9'; }
-
-        bool is_octal(const char c) { return c >= '0' && c <= '7'; }
-
-        bool is_bit(const char c) { return c == '0' || c == '1'; }
-
-        bool is_hex(const char c) {
-            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-                   (c >= 'A' && c <= 'F');
-        }
-
-        bool is_char(char c) {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                   (c == '_');
-        }
-
-        bool is_alphanumeric(char c) { return is_digit(c) || is_char(c); }
 
         // =========================================================
         // Lexer errors
