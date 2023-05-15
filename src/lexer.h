@@ -80,12 +80,14 @@ typedef struct Lexer {
         bool match(const char expected_char);            // LOOKAHEAD
         bool match_n(const std::string expected_string); // LOOKAHEAD n times
 
+        void new_line();
+
         // ===============================
         //  Methods for handling lexemes
         // ===============================
         void string_lexeme();
         void literal_lexeme();
-        bool char_lexeme();
+        void char_lexeme();
         void number_lexeme();
 
         // ====================
