@@ -2,6 +2,12 @@
 test: 
 	cd build && cmake .. && make && ./tests 
 
+builtin: 
+	cd build && cmake .. && make && ./flux ./builtin.gflx 
+
+ident: 
+	cd build && cmake .. && make && ./flux ./ident.gflx 
+
 char: 
 	cd build && cmake .. && make && ./flux ./char.gflx 
 

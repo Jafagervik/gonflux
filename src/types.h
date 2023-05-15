@@ -1,7 +1,7 @@
 #pragma once
 
 enum DataTypes {
-    U8 = 0,
+    U8,
     U16,
     U32,
     U64,
