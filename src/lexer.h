@@ -102,8 +102,7 @@ typedef struct Lexer {
                                            .col = column,
                                            .source_file = this->source_file};
 
-            this->token_list.push_back(
-                std::make_unique<Token>(type, location, nullptr));
+            this->token_list.push_back(std::make_unique<Token>(type, location));
         }
 
         void add_token(TokenType type, const std::string lexeme) {
@@ -113,7 +112,7 @@ typedef struct Lexer {
                                            .source_file = this->source_file};
 
             this->token_list.push_back(
-                std::make_unique<Token>(type, location, &lexeme));
+                std::make_unique<Token>(type, location, lexeme));
         }
 
         void add_token(TokenType type, const std::string lexeme,
@@ -124,7 +123,7 @@ typedef struct Lexer {
                                            .source_file = this->source_file};
 
             this->token_list.push_back(
-                std::make_unique<Token>(type, location, &lexeme));
+                std::make_unique<Token>(type, location, lexeme));
         }
 
         char peek() {

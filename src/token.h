@@ -237,10 +237,9 @@ typedef struct Location {
 typedef struct Token {
         TokenType type;
         Location location;
-        const std::string *lexeme;
+        std::string lexeme;
 
-        Token(TokenType type, Location location,
-              const std::string *lexeme = nullptr)
+        Token(TokenType type, Location location, const std::string lexeme = "")
             : type{type}, location{location}, lexeme{lexeme} {}
 
         /// Copy constructor for emplace_back
@@ -252,7 +251,7 @@ typedef struct Token {
             os << nameTT[t.type];
 
             // If we dont have text we dont output it, just the type
-            if (!t.lexeme || t.lexeme == nullptr) {
+            if (t.lexeme == "") {
                 return os << " " << t.location << '\n';
             }
             return os << " Lexeme: " << (t.lexeme)
