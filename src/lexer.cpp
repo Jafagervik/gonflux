@@ -31,12 +31,8 @@ void Lexer::tokenize() {
             }
             break;
         case '/':
-            if (match('/')) { // Single line comment
+            if (match('/')) { // Single line comment, add ml later
                 while (peek_next() != '\n' && !end_of_file())
-                    advance();
-            } else if (match('*')) { // FIXME: multiline comment
-                advance();
-                while (!end_of_file() && peek() != '*' && peek_next() != '/')
                     advance();
             } else if (match('=')) {
                 add_token(TOKEN_DIVIDEEQUAL);
@@ -264,7 +260,10 @@ void Lexer::string_lexeme() {
         return;
     }
 
-    const u16 lexeme_start = this->cursor;
+    const u16 lexeme_start_col = this->cursor;
+    const u16 lexeme_start_row = this->line;
+    const u32 lexeme_bol = this->beginning_of_line;
+
     const auto start_str = this->cursor_itr;
 
     while (peek() != '"' && !end_of_file()) {
@@ -283,7 +282,8 @@ void Lexer::string_lexeme() {
     // Remove one since we're at closing quote
     std::string literal = get_literal(start_str);
 
-    add_token(TOKEN_STRING, literal, lexeme_start);
+    add_token(TOKEN_STRING, literal, lexeme_start_row, lexeme_start_col,
+              lexeme_bol);
 }
 
 /**  function char_lexeme
@@ -305,11 +305,12 @@ void Lexer::char_lexeme() {
 }
 
 bool Lexer::builtin_lexeme() {
+    u32 start_idx = this->cursor; // We want error from where the @ is
+
     advance(); // Start of identifier
 
     bool found_builtin = false;
 
-    u32 start_idx = this->cursor;
     const auto start_itr = this->cursor_itr;
 
     while (is_alphanumeric(peek_next()))
@@ -358,7 +359,7 @@ void Lexer::literal_lexeme() {
 
     // If its not a datatype nor a keyword, it's a selfdeclared identifier or
     // just a mistake
-    add_token(TOKEN_IDENTIFIER, literal);
+    add_token(TOKEN_IDENTIFIER, literal, start_idx);
 }
 
 void Lexer::number_lexeme() { peek() == '0' ? zeros() : number_internal(); }
@@ -407,7 +408,7 @@ void Lexer::special_number_internal(TokenType token_type,
 
     const auto literal = get_literal(starting_position, this->cursor_itr + 1);
 
-    add_token(token_type, literal);
+    add_token(token_type, literal, literal_start_idx);
 }
 
 /** function number internal
@@ -437,7 +438,7 @@ void Lexer::number_internal() {
 
     const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
 
-    add_token(token, literal);
+    add_token(token, literal, start_idx);
 }
 
 // ===================================================
