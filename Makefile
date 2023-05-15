@@ -1,29 +1,36 @@
 ## Easy script 
-test: 
-	cd build && cmake .. && make && ./tests 
+
+all: 
+	cd build && cmake .. && make
+
+tests: 
+	cd build && cmake .. && make tests && ./tests 
+
+comments: 
+	cd build && cmake .. && make flux && ./flux ./comments.gflx 
 
 builtin: 
-	cd build && cmake .. && make && ./flux ./builtin.gflx 
+	cd build && cmake .. && make flux && ./flux ./builtin.gflx 
 
 ident: 
-	cd build && cmake .. && make && ./flux ./ident.gflx 
+	cd build && cmake .. && make flux  && ./flux ./ident.gflx 
 
 char: 
-	cd build && cmake .. && make && ./flux ./char.gflx 
+	cd build && cmake .. && make flux && ./flux ./char.gflx 
 
 string: 
-	cd build && cmake .. && make && ./flux ./string.gflx 
+	cd build && cmake .. && make flux && ./flux ./string.gflx 
 
 
 run2: 
-	cd build && cmake .. && make && ./flux ./test2.gflx 
+	cd build && cmake .. && make flux && ./flux ./test2.gflx 
 
 run3: 
-	cd build && cmake .. && make && ./flux ./test3.gflx 
+	cd build && cmake .. && make flux && ./flux ./test3.gflx 
 	
 run4: 
-	cd build && cmake .. && make && ./flux ./test4.gflx 
+	cd build && cmake .. && make flux && ./flux ./test4.gflx 
 
 
 run5: 
-	cd build && cmake .. && make && ./flux ./test4.gflx 
+	cd build && cmake .. && make flux && ./flux ./test4.gflx 
