@@ -3,6 +3,7 @@
 ## Current status 
 
 Read wiki :D
+Other than that: Lexer parses ~4500 tokens in average 0.007 seconds
 
 
 ## Why do we need another statically typed imperative language  

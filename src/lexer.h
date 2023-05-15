@@ -33,7 +33,7 @@ typedef struct Lexer {
             this->cursor_itr = this->data.begin();
 
             this->token_list = std::vector<std::unique_ptr<Token>>();
-            token_list.reserve(2000);
+            token_list.reserve(5000);
         }
 
         void tokenize();
