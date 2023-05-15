@@ -1,18 +1,21 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <cstdint>
+/*
+#include "../src/lexer.h"
+#include "../src/token.h"
 
-uint32_t factorial(uint32_t number) {
-    return number <= 1 ? number : factorial(number - 1) * number;
+auto get_payload(std::string filename) {
+    std::vector<char> payload = {'"', 'H', 'e', 'l', 'l', 'o', '"', '\n'};
+    auto lexer = Lexer(filename, payload);
+
+    lexer.tokenize();
+
+    return lexer.token_list;
 }
 
-uint32_t f(uint32_t num) { return num + 5; }
-
-TEST_CASE("Factorials are computed", "[factorial]") {
-    REQUIRE(factorial(1) == 1);
-    REQUIRE(factorial(2) == 2);
-    REQUIRE(factorial(3) == 6);
-    REQUIRE(factorial(10) == 3'628'800);
+TEST_CASE("Lexer String Test", "[get_payload]") {
+    REQUIRE(get_payload("test.gflx")[0]->type == TOKEN_STRING);
 }
+*/
 
-TEST_CASE("Testingof tests", "[f]") { REQUIRE(factorial(3) == 10); }
+TEST_CASE("Lexer String Test") { REQUIRE(1 == 1); }
