@@ -163,7 +163,7 @@ void Lexer::tokenize() {
                 if (!builtin_lexeme()) { // NOTE: Coding style differs from
                                          // elsewhere
                     throw_lexer_error(BUILTIN_NOT_FOUND);
-                    add_token(TOKEN_EOF); // NOTE: Early return
+                    add_token(TOKEN_EOF);
                     return;
                 }
             }
@@ -183,19 +183,19 @@ void Lexer::tokenize() {
             add_token(TOKEN_COMMA);
             break;
         default:
-            if (is_char(curr_sym)) {
+            if (std::isspace(curr_sym)) {
+                break;
+            } else if (is_char(curr_sym)) {
                 literal_lexeme();
             } else if (is_digit(curr_sym)) {
                 number_lexeme();
-            } else if (std::isspace(curr_sym)) {
-                break; // NOTE: Early return
             } else {
                 // Give an error since we could not
                 throw_lexer_error(UNKNOWN_CHARACTER);
             }
             break;
         }
-        advance(); // Go to next lexeme and start again
+        advance(); // Next state
     }
 
     // End of file
@@ -216,7 +216,7 @@ bool Lexer::match(const char expected_char) {
     // char_lexeme maybe add another int to keep track of lexeme start;
 
     // If the next char doesn't match, we keep looking
-    if (*(this->cursor_itr + 1) != expected_char)
+    if (peek_next() != expected_char)
         return false;
 
     // Else, we want to advance one more time since we've already looked
@@ -312,10 +312,10 @@ bool Lexer::builtin_lexeme() {
     u32 start_idx = this->cursor;
     const auto start_itr = this->cursor_itr;
 
-    while (is_alphanumeric(peek()))
+    while (is_alphanumeric(peek_next()))
         advance();
 
-    const std::string literal = get_literal(start_itr);
+    const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
 
     // Check if it is a reserved keyword
     const auto search_builtins = builtin_keywords.find(literal);
@@ -337,8 +337,6 @@ void Lexer::literal_lexeme() {
         advance();
 
     const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
-
-    PRINT(literal);
 
     // Check if it is a reserved keyword
     const auto search_keyword = keywords.find(literal);
@@ -424,16 +422,14 @@ void Lexer::number_internal() {
     const auto start_idx = this->cursor;
     bool is_float = false;
 
-    PRINT(peek());
-
-    while (is_digit(peek()))
+    while (is_digit(peek_next()))
         advance();
 
-    if (peek() == '.' && is_digit(peek_next())) {
+    if (peek_next() == '.' && is_digit(peek_next(2))) {
         is_float = true;
-        advance();
+        advance(); // Go to dot
 
-        while (is_digit(peek()) && !end_of_file())
+        while (is_digit(peek_next()))
             advance();
     }
 
@@ -449,8 +445,8 @@ void Lexer::number_internal() {
 // ===================================================
 
 void Lexer::throw_lexer_error(LEXER_ERROR error_code) {
-    std::cerr << "Lexer error: " << nameLE[error_code - 1] << " '"
-              << *this->cursor_itr << "' found in line " << this->line
+    std::cerr << "Lexer error: " << nameLE[error_code - 1] << " '" << peek()
+              << "' found in line " << this->line
               << " at column: " << this->cursor - this->beginning_of_line
               << " in file " << this->source_file << std::endl;
 }

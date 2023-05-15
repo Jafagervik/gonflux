@@ -19,7 +19,7 @@ auto main(int argc, char *argv[]) -> int {
     if (status != 0)
         return status;
 
-    // std::cout << args->filename << std::endl;
+    std::cout << args->filename << std::endl;
 
     std::ifstream file(args->filename, std::ios::binary);
 
@@ -27,19 +27,20 @@ auto main(int argc, char *argv[]) -> int {
 
     fill_byte_buffer(&payload, &file);
 
-    // Look at the contents of the file
     // std::for_each(payload.begin(), payload.end(),
     //               [](const char &c) { std::cout << c << ""; });
 
-    auto lexer = Lexer(args->filename, payload);
+    auto lexer = std::make_unique<Lexer>(args->filename, payload);
 
-    TIMER(lexer.tokenize);
+    TIMER(lexer->tokenize);
 
-    // std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
+    // TODO: Find out if or how the lexer is freed
+    const auto tokens = std::move(lexer->token_list);
 
-    // TODO: Tokenlist should be turned into iterator
-    std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
-                  [](const auto &t) { std::cout << *t << ' '; });
+    std::cout << "Size of tokenlist: " << tokens.size() << "\n";
+
+    // std::for_each(tokens.begin(), tokens.end(),
+    //               [](const auto &t) { std::cout << *t; });
 
     file.close();
 
