@@ -3,7 +3,7 @@ test:
 	cd build && cmake .. && make && ./tests 
 
 run: 
-	cd build && cmake .. && make && ./flux ./test.gflx 
+	cd build && cmake .. && make && ./flux ./string.gflx 
 
 
 run2: 

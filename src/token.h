@@ -215,14 +215,17 @@ static const std::string nameTT[] = {
 };
 
 typedef enum LEXER_ERROR {
-    UNTERMINATED_STRING = 1,
+    UNTERMINATED_STRING = 0,
     UNTERMINATED_CHAR,
     UNKNOWN_CHARACTER
 } LEXER_ERROR;
 
+static const std::string nameLE[] = {"UNTERMINATED_STRING", "UNTERMINATED_CHAR",
+                                     "UNKNOWN_CHARACTER"};
+
 typedef struct Location {
-        u32 row = 1;
-        u32 col;
+        u16 row = 1;
+        u16 col;
         std::string_view source_file;
 
         friend std::ostream &operator<<(std::ostream &os, const Location &l) {
@@ -233,12 +236,11 @@ typedef struct Location {
 
 typedef struct Token {
         TokenType type;
-
         Location location;
+        const std::string *lexeme;
 
-        std::string *lexeme;
-
-        Token(TokenType type, Location location, std::string *lexeme = nullptr)
+        Token(TokenType type, Location location,
+              const std::string *lexeme = nullptr)
             : type{type}, location{location}, lexeme{lexeme} {}
 
         /// Copy constructor for emplace_back
@@ -253,7 +255,7 @@ typedef struct Token {
             if (!t.lexeme || t.lexeme == nullptr) {
                 return os << " " << t.location << '\n';
             }
-            return os << " Lexeme: " << t.lexeme << " Location: " << t.location
-                      << '\n';
+            return os << " Lexeme: " << (t.lexeme)
+                      << " Location: " << t.location << '\n';
         }
 } Token;

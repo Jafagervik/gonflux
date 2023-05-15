@@ -7,8 +7,6 @@
  *
  */
 void Lexer::tokenize() {
-    std::cout << "\nStarting tokenization ...\n\n";
-
     while (!end_of_file()) {
         const auto curr_sym = peek();
         switch (curr_sym) {
@@ -164,7 +162,11 @@ void Lexer::tokenize() {
                 return;
             }
         case '"':
-            string_lexeme();
+            if (!match('"')) { // Inverted logic since this happens most times
+                string_lexeme();
+                break;
+            }
+            add_token(TOKEN_STRING, ""); // Add empty string
             break;
         case '@': // NOTE: KEYWORDS
 
@@ -189,23 +191,19 @@ void Lexer::tokenize() {
             add_token(TOKEN_COMMA);
             break;
         default:
-
             if (is_char(curr_sym)) {
                 literal_lexeme();
             } else if (is_digit(curr_sym)) {
                 number_lexeme();
-            } else if (std::isspace(curr_sym)) { // TODO: Check if this actually
-                                                 // covers all kinds of spaces
-                break;
+            } else if (std::isspace(curr_sym)) {
+                break; // Just break  directly here
             } else {
                 // Give an error since we could not
                 throw_lexer_error(UNKNOWN_CHARACTER);
             }
             break;
         }
-
-        // Go to next char
-        advance();
+        advance(); // Go to next lexeme and start again
     }
 
     // End of file
@@ -213,8 +211,6 @@ void Lexer::tokenize() {
 
     std::for_each(this->token_list.begin(), this->token_list.end(),
                   [](const auto &t) { std::cout << *t << '\n'; });
-
-    std::cout << "End of tokenization ...\n";
 }
 
 /** function match
@@ -266,10 +262,18 @@ bool Lexer::match_n(const std::string expected_string) {
 //      Special cases
 // ====================================
 void Lexer::string_lexeme() {
-    u32 start_idx = this->cursor;
-    const auto start_itr = this->cursor_itr;
+    // NOTE: For now, empty strings are handled in the switch
 
-    // NOTE: Works like multistring for now
+    advance(); // We now start at first symbol
+
+    if (end_of_file()) {
+        throw_lexer_error(UNTERMINATED_STRING);
+        return;
+    }
+
+    const u32 start_idx = this->cursor;
+    const std::vector<char>::iterator start_str = this->cursor_itr;
+
     while (peek() != '"' && !end_of_file()) {
         if (peek() == '\n') {
             this->line++;
@@ -282,12 +286,10 @@ void Lexer::string_lexeme() {
         throw_lexer_error(UNTERMINATED_STRING);
     }
 
-    advance();
+    // Remove one since we're at closing quote
+    std::string literal = get_literal(start_str, this->cursor_itr);
 
-    //  TODO: start + 1 to remove  quote, end - 1 for the same reason
-    auto literal = get_literal(start_itr);
-
-    add_token(TOKEN_STRING, literal);
+    add_token(TOKEN_STRING, literal, start_idx);
 }
 
 /**  function char_lexeme
@@ -306,7 +308,11 @@ bool Lexer::char_lexeme() {
 
     advance(); // to go the char
 
-    add_token(TOKEN_CHAR, std::string(1, peek()));
+    const std::string c = std::string(1, peek());
+
+    PRINT(c);
+
+    add_token(TOKEN_CHAR, c);
 
     advance(); // closing '
 
@@ -323,7 +329,7 @@ void Lexer::literal_lexeme() {
     const std::string literal = get_literal(start_itr);
 
     // Check if it is a reserved keyword
-    auto search_keyword = keywords.find(literal);
+    const auto search_keyword = keywords.find(literal);
 
     if (search_keyword != keywords.end()) {
         TokenType token = search_keyword->second;
@@ -332,7 +338,7 @@ void Lexer::literal_lexeme() {
     }
 
     // Check if it is a datatype
-    auto found_datatype = ALL_DATATYPES.find(literal);
+    const auto found_datatype = ALL_DATATYPES.find(literal);
 
     if (found_datatype != ALL_DATATYPES.end()) {
         add_token(TOKEN_DATATYPE, literal);
@@ -355,7 +361,7 @@ void Lexer::number_lexeme() {
     const auto start_position_itr = this->cursor_itr;
     const auto start_idx = this->cursor;
 
-    while (is_digit(*this->cursor_itr) && !end_of_file())
+    while (is_digit(peek()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(start_position_itr);
@@ -425,8 +431,8 @@ void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
 // ===================================================
 
 void Lexer::throw_lexer_error(LEXER_ERROR error_code) {
-    std::cerr << "Lexer error: " << error_code << " '" << *this->cursor_itr
-              << "' found in line " << this->line
+    std::cerr << "Lexer error: " << nameLE[error_code] << " '"
+              << *this->cursor_itr << "' found in line " << this->line
               << " at column: " << this->cursor - this->beginning_of_line
               << " in file " << this->source_file << std::endl;
 }

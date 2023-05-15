@@ -29,8 +29,9 @@ int main(int argc, char *argv[]) {
 
     fill_byte_buffer(&payload, &file);
 
-    std::for_each(payload.begin(), payload.end(),
-                  [](const char &c) { std::cout << c << ""; });
+    // Look at the contents of the file
+    // std::for_each(payload.begin(), payload.end(),
+    //               [](const char &c) { std::cout << c << ""; });
 
     auto lexer = Lexer(args->filename, payload);
 
