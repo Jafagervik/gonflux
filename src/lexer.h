@@ -111,7 +111,7 @@ typedef struct Lexer {
 
         const char peek_next(u16 k = 1) {
             if (this->cursor_itr + k != this->data.end()) {
-                return *(this->cursor_itr + 1);
+                return *(this->cursor_itr + k);
             }
             return '\0';
         }
