@@ -29,8 +29,9 @@ int main(int argc, char *argv[]) {
 
     fill_byte_buffer(&payload, &file);
 
-    std::for_each(payload.begin(), payload.end(),
-                  [](const char &c) { std::cout << c << ""; });
+    // Look at the contents of the file
+    // std::for_each(payload.begin(), payload.end(),
+    //               [](const char &c) { std::cout << c << ""; });
 
     auto lexer = Lexer(args->filename, payload);
 
@@ -39,7 +40,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
 
     // TODO: Tokenlist should be turned into iterator
-
     // std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
     //               [](const auto &t) { std::cout << *t << ' '; });
 

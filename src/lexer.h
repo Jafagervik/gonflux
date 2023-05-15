@@ -58,20 +58,18 @@ typedef struct Lexer {
         std::vector<std::unique_ptr<Token>> token_list;
 
         u32 cursor;               // Where we're at in the iterator
-        u32 beginning_of_line;    // Set to 0 each \n
+        u32 beginning_of_line;    // Set to this->cursor each \n
         u32 beginning_of_literal; // needed for longer names to get accurate
                                   // starting point
-        u32 line;                 // Incremented each \n
+        u16 line;                 // Incremented each \n
         std::vector<char>::iterator cursor_itr;
 
         Lexer(std::string source_file, std::vector<char> data)
             : source_file{source_file}, data{data}, cursor{0},
-              beginning_of_literal{0}, beginning_of_line{0}, line{0} {
+              beginning_of_literal{0}, beginning_of_line{0}, line{1} {
             // Alternative to cursor
             this->cursor_itr = this->data.begin();
 
-            // TODO: Look into buffering of tokens.
-            // eg. every amount of tokens, buffer and send to parser?
             this->token_list = std::vector<std::unique_ptr<Token>>();
             token_list.reserve(2000);
         }
@@ -94,29 +92,38 @@ typedef struct Lexer {
         // More specific number handling
         //===================
         void zeros();
-
         void floats(const std::vector<char>::iterator starting_position);
         void hexnumbers(const std::vector<char>::iterator starting_position);
         void binarynumbers(const std::vector<char>::iterator starting_position);
 
         void add_token(TokenType type) {
-            auto location =
-                Location{.row = this->line,
-                         .col = this->cursor - this->beginning_of_line,
-                         .source_file = this->source_file};
+            u16 column = this->cursor - this->beginning_of_line;
+            const auto location = Location{.row = this->line,
+                                           .col = column,
+                                           .source_file = this->source_file};
 
-            this->token_list.emplace_back(
-                std::make_unique<Token>(Token(type, location, nullptr)));
+            this->token_list.push_back(std::make_unique<Token>(type, location));
         }
 
-        void add_token(TokenType type, std::string lexeme) {
-            auto location =
-                Location{.row = this->line,
-                         .col = this->cursor - this->beginning_of_line,
-                         .source_file = this->source_file};
+        void add_token(TokenType type, const std::string lexeme) {
+            u16 column = this->cursor - this->beginning_of_line;
+            const auto location = Location{.row = this->line,
+                                           .col = column,
+                                           .source_file = this->source_file};
 
-            this->token_list.emplace_back(
-                std::make_unique<Token>(Token(type, location, &lexeme)));
+            this->token_list.push_back(
+                std::make_unique<Token>(type, location, lexeme));
+        }
+
+        void add_token(TokenType type, const std::string lexeme,
+                       u16 lexeme_start) {
+            u16 column = lexeme_start - this->beginning_of_line;
+            const auto location = Location{.row = this->line,
+                                           .col = column,
+                                           .source_file = this->source_file};
+
+            this->token_list.push_back(
+                std::make_unique<Token>(type, location, lexeme));
         }
 
         char peek() {
@@ -133,7 +140,6 @@ typedef struct Lexer {
             return '\0';
         }
 
-        // TODO: Possibly remove
         char peek_n_ahead(u32 n) {
             if (this->cursor_itr + n != this->data.end()) {
                 return *(this->cursor_itr + n);
@@ -159,12 +165,15 @@ typedef struct Lexer {
 
         /** from the vector of chars or pointer, get
          *  us the substring telling us what the literal is
-         * TODO: see if this is inded correct
+         *
          */
         const std::string get_literal(const std::vector<char>::iterator start) {
-            std::cout << "get literal Lexeme " << *start << *this->cursor_itr
-                      << std::endl;
             return std::string(start, this->cursor_itr);
+        }
+
+        const std::string get_literal(const std::vector<char>::iterator start,
+                                      const std::vector<char>::iterator end) {
+            return std::string(start, end);
         }
 
         bool is_char(char c) {
@@ -176,5 +185,4 @@ typedef struct Lexer {
 
         // Lexer errors
         void throw_lexer_error(LEXER_ERROR error_code);
-
 } Lexer;
