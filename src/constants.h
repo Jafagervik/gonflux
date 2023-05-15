@@ -1,8 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include <array>
 #include <map>
+#include <unordered_set>
 
 // Version
 static constexpr auto MAJOR = 0;
@@ -22,7 +22,7 @@ static constexpr auto NAME = R"(
     ============= ==          ==========  ==       ==
 )";
 
-[[maybe_unused]] static const std::array<std::string, 18> ALL_DATATYPES = {
+[[maybe_unused]] static const std::unordered_set<std::string> ALL_DATATYPES = {
     "u8",   "u16", "u32", "u64", "u128", "i8",   "i16", "i32",  "i64",
     "i128", "f8",  "f16", "f32", "f64",  "f128", "str", "char", "bool"};
 

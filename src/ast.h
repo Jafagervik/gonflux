@@ -1,6 +1,7 @@
-#include <vector>
 #include "pch.h"
 #include "token.h"
+#include <iostream>
+#include <vector>
 
 union NodeTypes {
         short F32;
@@ -11,11 +12,20 @@ template <typename T> struct AstNode {
         T value;
         TokenType type;
         Location location;
-        struct AstNode *parent;
-        std::vector<struct AstNode *> children; // or **Node
+        AstNode *parent;
+        std::vector<AstNode *> children; // or **Node
 };
 
-typedef struct AST {
-        struct AstNode<int> *root; // Beginning of file
+template <typename T> struct AST {
+        AstNode<T> *root;
+        u32 size;
 
-} AST;
+        AST(AstNode<T> *root) : root{root}, size{1} {}
+
+        void dfs();
+        void bfs();
+
+        void insert();
+        void remove();
+        void build();
+};

@@ -37,7 +37,7 @@ typedef enum {
     TOKEN_ASTERISK,      // *  multiply or dereferencing
     TOKEN_DIVIDE,        // /
     TOKEN_MODULO,        // %
-    TOKEN_POW,           // ** ,  FIXME: Could be tricky with pointers
+    TOKEN_POW,           // **
     TOKEN_BITAND,        // &
     TOKEN_BITNOT,        // ~
     TOKEN_BITOR,         // |

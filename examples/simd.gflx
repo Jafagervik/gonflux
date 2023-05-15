@@ -2,16 +2,15 @@
 @import "simd"
 
 main :: () ->
-    
     a: SIMD[i32] = SIMD.init([1,2,3,4])
     b: SIMD[i32] = SIMD.init([2,3,4,5])
 
     // Simd operations 
     c: SIMD[i32] = a + b
 
-    avg: i32 = c.avg()
+    avg1: i32 = c.avg()
 
     // OR:
-    // avg: i32 = c |> avg()
+    avg2: i32 = c |> avg()
 end
 

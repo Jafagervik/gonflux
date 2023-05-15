@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "constants.h"
 #include "token.h"
 
 /** function tokenize goes through the main file and creates tokens out
@@ -9,7 +10,8 @@ void Lexer::tokenize() {
     std::cout << "\nStarting tokenization ...\n\n";
 
     while (!end_of_file()) {
-        switch (peek()) {
+        const auto curr_sym = peek();
+        switch (curr_sym) {
         case '(':
             add_token(TOKEN_PARENTOPEN);
             break;
@@ -186,15 +188,15 @@ void Lexer::tokenize() {
         case ',':
             add_token(TOKEN_COMMA);
             break;
-        case ' ': // Spaces will be skipped
-        case '\t':
-        case '\r':
-            break;
         default:
-            if (is_char(peek())) {
+
+            if (is_char(curr_sym)) {
                 literal_lexeme();
-            } else if (is_digit(peek())) {
+            } else if (is_digit(curr_sym)) {
                 number_lexeme();
+            } else if (std::isspace(curr_sym)) { // TODO: Check if this actually
+                                                 // covers all kinds of spaces
+                break;
             } else {
                 // Give an error since we could not
                 throw_lexer_error(UNKNOWN_CHARACTER);
@@ -255,7 +257,7 @@ bool Lexer::match_n(const std::string expected_string) {
     }
 
     // If we matched on all, advance to next
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
         advance();
     return true;
 }
@@ -288,8 +290,13 @@ void Lexer::string_lexeme() {
     add_token(TOKEN_STRING, literal);
 }
 
-/** Checks if it's a quote
+/**  function char_lexeme
  *
+ *
+ *  For the case of char, we enforce strict rules about having jsut a single
+ *  character inside single quotes. This means we can early stop the lexer
+ *  if such an error is found, thus this function returning a bool.
+ *  Simply using `exit` would not clean up memory in an effective manner
  */
 bool Lexer::char_lexeme() {
     if (peek_n_ahead(2) == '\'' || peek_neighbor() == '\0') {
@@ -325,14 +332,15 @@ void Lexer::literal_lexeme() {
     }
 
     // Check if it is a datatype
-    auto found_datatype =
-        std::find(ALL_DATATYPES.begin(), ALL_DATATYPES.end(), literal);
+    auto found_datatype = ALL_DATATYPES.find(literal);
 
     if (found_datatype != ALL_DATATYPES.end()) {
         add_token(TOKEN_DATATYPE, literal);
         return;
     }
 
+    // If its not a datatype nor a keyword, it's a selfdeclared identifier or
+    // just a mistake
     add_token(TOKEN_IDENTIFIER, literal);
 }
 
@@ -352,7 +360,7 @@ void Lexer::number_lexeme() {
 
     const std::string literal = get_literal(start_position_itr);
 
-    // float
+    // TODO: handle float in this case
     if (literal.find('.') != std::string::npos) {
         return;
     }
@@ -366,10 +374,10 @@ void Lexer::zeros() {
     auto next = peek_neighbor();
 
     if (next == '.') {
-        advance(); // NOTE: Need to advance to next pos
+        advance();
         floats(starting_position);
     } else if (next == 'x' or next == 'X') {
-        advance(); // NOTE: Same as above
+        advance();
         hexnumbers(starting_position);
     } else if (next == 'b' || next == 'B') {
         advance();
@@ -386,7 +394,7 @@ void Lexer::zeros() {
 }
 
 void Lexer::floats(const std::vector<char>::iterator starting_position) {
-    while (is_digit(peek_neighbor()) && !end_of_file())
+    while (is_digit(peek()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
@@ -395,7 +403,7 @@ void Lexer::floats(const std::vector<char>::iterator starting_position) {
 }
 
 void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
-    while (is_hex(peek_neighbor()) && !end_of_file())
+    while (is_hex(peek()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
@@ -404,7 +412,7 @@ void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
 }
 
 void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
-    while (is_bit(peek_neighbor()) && !end_of_file())
+    while (is_bit(peek()) && !end_of_file())
         advance();
 
     const std::string literal = get_literal(starting_position);
