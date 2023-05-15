@@ -21,16 +21,21 @@ auto main(int argc, char *argv[]) -> int {
 
     std::cout << args->filename << std::endl;
 
-    std::ifstream file(args->filename, std::ios::binary);
+    std::ifstream file(args->filename);
 
-    std::vector<char> payload;
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file.\n";
+        return FileNotFound;
+    }
 
-    fill_byte_buffer(&payload, &file);
+    // OlD
+    // std::vector<char> payload;
+    // fill_byte_buffer(&payload, &file);
 
     // std::for_each(payload.begin(), payload.end(),
     //               [](const char &c) { std::cout << c << ""; });
 
-    auto lexer = std::make_unique<Lexer>(args->filename, payload);
+    auto lexer = std::make_unique<Lexer>(args->filename, &file);
 
     TIMER(lexer->tokenize);
 

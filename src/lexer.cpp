@@ -3,7 +3,9 @@
 
 void Lexer::tokenize() {
     while (!end_of_file()) {
-        const auto curr_sym = peek();
+        this->current_lexeme = ""; // Reset lexeme
+
+        file->get(this->curr_sym);
         switch (curr_sym) {
         case '(':
             add_token(TOKEN_PARENTOPEN);
@@ -179,11 +181,11 @@ void Lexer::tokenize() {
             add_token(TOKEN_COMMA);
             break;
         default:
-            if (std::isspace(curr_sym)) {
+            if (std::isspace(this->curr_sym)) {
                 break;
-            } else if (is_char(curr_sym)) {
+            } else if (is_char(this->curr_sym)) {
                 literal_lexeme();
-            } else if (is_digit(curr_sym)) {
+            } else if (is_digit(this->curr_sym)) {
                 number_lexeme();
             } else {
                 // Give an error since we could not
@@ -221,9 +223,10 @@ bool Lexer::match(const char expected_char) {
     return true;
 }
 
+// FIXME: Rewrite to use newer method
 bool Lexer::match_n(const std::string expected_string) {
     const size_t n = expected_string.size();
-    auto curr_itr = this->cursor_itr + 1;
+    auto curr_itr = (this->file + 1).peek();
 
     for (int i = 0; i < n; i++) {
         if (*curr_itr == '\0') {
@@ -264,8 +267,6 @@ void Lexer::string_lexeme() {
     const u16 lexeme_start_row = this->line;
     const u32 lexeme_bol = this->beginning_of_line;
 
-    const auto start_str = this->cursor_itr;
-
     while (peek() != '"' && !end_of_file()) {
         if (peek() == '\n') {
             this->line++;
@@ -280,10 +281,9 @@ void Lexer::string_lexeme() {
     }
 
     // Remove one since we're at closing quote
-    std::string literal = get_literal(start_str);
 
-    add_token(TOKEN_STRING, literal, lexeme_start_row, lexeme_start_col,
-              lexeme_bol);
+    add_token(TOKEN_STRING, this->current_lexeme, lexeme_start_row,
+              lexeme_start_col, lexeme_bol);
 }
 
 /**  function char_lexeme
@@ -311,12 +311,12 @@ bool Lexer::builtin_lexeme() {
 
     bool found_builtin = false;
 
-    const auto start_itr = this->cursor_itr;
-
     while (is_alphanumeric(peek_next()))
         advance();
 
-    const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
+    // const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
+    std::string literal =
+        this->current_lexeme + this->curr_sym; // TODO: let char be in class
 
     // Check if it is a reserved keyword
     const auto search_builtins = builtin_keywords.find(literal);
@@ -332,12 +332,12 @@ bool Lexer::builtin_lexeme() {
 
 void Lexer::literal_lexeme() {
     u32 start_idx = this->cursor;
-    const auto start_itr = this->cursor_itr;
 
     while (is_alphanumeric(peek_next()))
         advance();
 
-    const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
+    std::string literal =
+        this->current_lexeme + this->curr_sym; // TODO: let char be in class
 
     // Check if it is a reserved keyword
     const auto search_keyword = keywords.find(literal);
@@ -396,7 +396,6 @@ void Lexer::octal_numbers() { special_number_internal(TOKEN_OCTAL, is_octal); }
 // NOTE: Interal helper for special numbers
 void Lexer::special_number_internal(TokenType token_type,
                                     std::function<bool(char)> filter) {
-    const auto starting_position = this->cursor_itr;
     const auto literal_start_idx =
         this->cursor; // NOTE: Use this for correct column
 
@@ -406,7 +405,8 @@ void Lexer::special_number_internal(TokenType token_type,
     while (filter(peek_next()))
         advance();
 
-    const auto literal = get_literal(starting_position, this->cursor_itr + 1);
+    std::string literal =
+        this->current_lexeme + this->curr_sym; // TODO: let char be in class
 
     add_token(token_type, literal, literal_start_idx);
 }
@@ -419,7 +419,6 @@ void Lexer::special_number_internal(TokenType token_type,
  * TODO:  support 10E9 notation
  */
 void Lexer::number_internal() {
-    const auto start_position_itr = this->cursor_itr;
     const auto start_idx = this->cursor;
     bool is_float = false;
 
@@ -434,7 +433,8 @@ void Lexer::number_internal() {
             advance();
     }
 
-    const auto literal = get_literal(start_position_itr, this->cursor_itr + 1);
+    std::string literal =
+        this->current_lexeme + this->curr_sym; // TODO: let char be in class
 
     const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
 

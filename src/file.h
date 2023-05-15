@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
 
 void fill_byte_buffer(std::vector<char> *payload, std::ifstream *file) {

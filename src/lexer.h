@@ -1,5 +1,6 @@
 #pragma once
 
+// #include "basic_istream"
 #include "constants.h"
 #include "pch.h"
 #include "token.h"
@@ -16,21 +17,25 @@ using char_iter = std::vector<char>::iterator;
 typedef struct Lexer {
         // TODO: Add more files when dealing with
         std::string source_file;
-        std::vector<char> data;
+        // std::vector<char> data;
         std::vector<std::unique_ptr<Token>> token_list;
+
+        std::ifstream *file;
+        std::string current_lexeme; // stores the lexeme we're building with
+        char curr_sym;              // Current char we're looking at
 
         u32 cursor;               // Where we're at in the iterator
         u32 beginning_of_line;    // Set to this->cursor each \n
         u32 beginning_of_literal; // needed for longer names to get accurate
                                   // starting point
         u16 line;                 // Incremented each \n
-        char_iter cursor_itr;     // Iterator going through data
+        // char_iter cursor_itr;     // Iterator going through data
 
-        Lexer(std::string source_file, std::vector<char> data)
-            : source_file{source_file}, data{data}, cursor{0},
+        Lexer(std::string source_file, std::ifstream *file)
+            : source_file{source_file}, file{file}, cursor{0},
               beginning_of_literal{0}, beginning_of_line{0}, line{1} {
             // Alternative to cursor
-            this->cursor_itr = this->data.begin();
+            // this->cursor_itr = this->data.begin();
 
             this->token_list = std::vector<std::unique_ptr<Token>>();
             token_list.reserve(5000);
@@ -111,37 +116,32 @@ typedef struct Lexer {
                 std::make_unique<Token>(type, location, lexeme));
         }
 
-        const std::string get_literal(const char_iter start) {
-            return std::string(start, this->cursor_itr);
-        }
-
-        const std::string get_literal(const char_iter start,
-                                      const char_iter end) {
-            return std::string(start, end);
-        }
-
-        const char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
+        const char peek() { return file->peek(); }
 
         const char peek_next(u16 k = 1) {
-            if (this->cursor_itr + k != this->data.end()) {
-                return *(this->cursor_itr + k);
-            }
-            return '\0';
+
+            auto next = file->peek();
+            return (next != EOF && next.good()) ? next : '\0';
         }
 
         char peek_n_ahead(u32 n) {
-            if (this->cursor_itr + n != this->data.end()) {
-                return *(this->cursor_itr + n);
+            size_t next;
+            for (size_t i = 0; i < n; ++i) {
+                next = this->file->peek();
+                if (!(next != EOF && next.good()))
+                    return '\0';
             }
-            return '\0';
+
+            return next.peek();
         }
 
         inline bool end_of_file() {
-            return this->cursor_itr == this->data.end();
+            return this->file->peek() != EOF && file->good();
         }
 
+        // TODO: append to current string
         void advance() {
-            ++this->cursor_itr;
+            this->current_lexeme += this->file->get();
             ++this->cursor;
         }
 
