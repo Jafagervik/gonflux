@@ -40,7 +40,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
 
     // TODO: Tokenlist should be turned into iterator
-
     // std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
     //               [](const auto &t) { std::cout << *t << ' '; });
 

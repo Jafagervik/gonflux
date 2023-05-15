@@ -37,9 +37,9 @@ void Lexer::tokenize() {
             break;
         case '/':
             if (match('/')) { // Single line comment
-                while (peek() != '\n' && !end_of_file())
+                while (peek_neighbor() != '\n' && !end_of_file())
                     advance();
-            } else if (match('*')) { // multiline comment
+            } else if (match('*')) { // FIXME: multiline comment
                 advance();
                 while (!end_of_file() && peek() != '*' &&
                        peek_neighbor() != '/')
@@ -91,7 +91,8 @@ void Lexer::tokenize() {
         case '\n': // This is what happens when we go to a new line
             add_token(TOKEN_NEWLINE);
             this->line++;
-            this->beginning_of_line = 0; // This is for column to be calculated
+            this->beginning_of_line =
+                this->cursor + 1; // This is for column to be calculated
             break;
 
         case '|':
@@ -169,7 +170,6 @@ void Lexer::tokenize() {
             add_token(TOKEN_STRING, ""); // Add empty string
             break;
         case '@': // NOTE: KEYWORDS
-
             if (match_n("import")) {
                 add_token(TOKEN_IMPORT, "import");
             } else {
@@ -196,7 +196,7 @@ void Lexer::tokenize() {
             } else if (is_digit(curr_sym)) {
                 number_lexeme();
             } else if (std::isspace(curr_sym)) {
-                break; // Just break  directly here
+                break; // NOTE: Early return
             } else {
                 // Give an error since we could not
                 throw_lexer_error(UNKNOWN_CHARACTER);
@@ -262,8 +262,6 @@ bool Lexer::match_n(const std::string expected_string) {
 //      Special cases
 // ====================================
 void Lexer::string_lexeme() {
-    // NOTE: For now, empty strings are handled in the switch
-
     advance(); // We now start at first symbol
 
     if (end_of_file()) {
@@ -271,13 +269,13 @@ void Lexer::string_lexeme() {
         return;
     }
 
-    const u32 start_idx = this->cursor;
-    const std::vector<char>::iterator start_str = this->cursor_itr;
+    const u16 lexeme_start = this->cursor;
+    const auto start_str = this->cursor_itr;
 
     while (peek() != '"' && !end_of_file()) {
         if (peek() == '\n') {
             this->line++;
-            this->beginning_of_line = 0;
+            this->beginning_of_line = this->cursor + 1;
         }
         advance();
     }
@@ -289,7 +287,7 @@ void Lexer::string_lexeme() {
     // Remove one since we're at closing quote
     std::string literal = get_literal(start_str, this->cursor_itr);
 
-    add_token(TOKEN_STRING, literal, start_idx);
+    add_token(TOKEN_STRING, literal, lexeme_start);
 }
 
 /**  function char_lexeme
