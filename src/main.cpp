@@ -39,8 +39,8 @@ auto main(int argc, char *argv[]) -> int {
 
     std::cout << "Size of tokenlist: " << tokens.size() << "\n";
 
-    std::for_each(tokens.begin(), tokens.end(),
-                  [](const auto &t) { std::cout << *t; });
+    // std::for_each(tokens.begin(), tokens.end(),
+    //               [](const auto &t) { std::cout << *t; });
 
     file.close();
 
