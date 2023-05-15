@@ -2,7 +2,10 @@
 test: 
 	cd build && cmake .. && make && ./tests 
 
-run: 
+char: 
+	cd build && cmake .. && make && ./flux ./char.gflx 
+
+string: 
 	cd build && cmake .. && make && ./flux ./string.gflx 
 
 

@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "token.h"
+#include <cstdlib>
 #include <iostream>
-#include <vector>
+#include <list>
+#include <queue>
+#include <stack>
 
 union NodeTypes {
         short F32;
@@ -13,7 +16,7 @@ template <typename T> struct AstNode {
         TokenType type;
         Location location;
         AstNode *parent;
-        std::vector<AstNode *> children; // or **Node
+        std::list<AstNode *> children; // or **Node
 };
 
 template <typename T> struct AST {

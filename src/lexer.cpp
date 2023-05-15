@@ -89,10 +89,7 @@ void Lexer::tokenize() {
             advance();
             break;
         case '\n': // This is what happens when we go to a new line
-            add_token(TOKEN_NEWLINE);
-            this->line++;
-            this->beginning_of_line =
-                this->cursor + 1; // This is for column to be calculated
+            new_line();
             break;
 
         case '|':
@@ -155,13 +152,14 @@ void Lexer::tokenize() {
             }
             break;
         case '\'':
-            if (char_lexeme()) {
-                break;
+            if (match('\'')) {
+                add_token(TOKEN_CHAR, ""); // empty char
+            } else if (match('\0')) {
+                throw_lexer_error(INVALID_CHAR);
             } else {
-                throw_lexer_error(UNTERMINATED_CHAR);
-                add_token(TOKEN_EOF); // NOTE: Early return
-                return;
+                char_lexeme();
             }
+            break;
         case '"':
             if (!match('"')) { // Inverted logic since this happens most times
                 string_lexeme();
@@ -258,6 +256,12 @@ bool Lexer::match_n(const std::string expected_string) {
     return true;
 }
 
+void Lexer::new_line() {
+    add_token(TOKEN_NEWLINE);
+    this->line++;
+    this->beginning_of_line = this->cursor + 1;
+}
+
 // ====================================
 //      Special cases
 // ====================================
@@ -282,6 +286,7 @@ void Lexer::string_lexeme() {
 
     if (end_of_file()) {
         throw_lexer_error(UNTERMINATED_STRING);
+        return;
     }
 
     // Remove one since we're at closing quote
@@ -298,23 +303,14 @@ void Lexer::string_lexeme() {
  *  if such an error is found, thus this function returning a bool.
  *  Simply using `exit` would not clean up memory in an effective manner
  */
-bool Lexer::char_lexeme() {
-    if (peek_n_ahead(2) == '\'' || peek_neighbor() == '\0') {
-        throw_lexer_error(UNTERMINATED_CHAR);
-        return false;
-    }
-
+void Lexer::char_lexeme() {
     advance(); // to go the char
 
     const std::string c = std::string(1, peek());
 
-    PRINT(c);
-
     add_token(TOKEN_CHAR, c);
 
     advance(); // closing '
-
-    return true;
 }
 
 void Lexer::literal_lexeme() {
@@ -429,7 +425,7 @@ void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
 // ===================================================
 
 void Lexer::throw_lexer_error(LEXER_ERROR error_code) {
-    std::cerr << "Lexer error: " << nameLE[error_code] << " '"
+    std::cerr << "Lexer error: " << nameLE[error_code - 1] << " '"
               << *this->cursor_itr << "' found in line " << this->line
               << " at column: " << this->cursor - this->beginning_of_line
               << " in file " << this->source_file << std::endl;

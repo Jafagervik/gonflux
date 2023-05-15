@@ -1,7 +1,4 @@
-#import "ast.h"
-#include <cstdlib>
-#include <queue>
-#include <stack>
+#include "ast.h"
 
 template <typename T> void AST<T>::dfs() {
     auto start = root;

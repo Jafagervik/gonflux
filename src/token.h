@@ -215,13 +215,14 @@ static const std::string nameTT[] = {
 };
 
 typedef enum LEXER_ERROR {
-    UNTERMINATED_STRING = 0,
+    UNTERMINATED_STRING = 1,
     UNTERMINATED_CHAR,
-    UNKNOWN_CHARACTER
+    UNKNOWN_CHARACTER,
+    INVALID_CHAR,
 } LEXER_ERROR;
 
 static const std::string nameLE[] = {"UNTERMINATED_STRING", "UNTERMINATED_CHAR",
-                                     "UNKNOWN_CHARACTER"};
+                                     "UNKNOWN_CHARACTER", "INVALID_CHAR"};
 
 typedef struct Location {
         u16 row = 1;
