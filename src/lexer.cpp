@@ -281,7 +281,7 @@ void Lexer::string_lexeme() {
     }
 
     // Remove one since we're at closing quote
-    std::string literal = get_literal(start_str, this->cursor_itr);
+    std::string literal = get_literal(start_str);
 
     add_token(TOKEN_STRING, literal, lexeme_start);
 }
@@ -333,17 +333,19 @@ void Lexer::literal_lexeme() {
     u32 start_idx = this->cursor;
     const auto start_itr = this->cursor_itr;
 
-    while (is_alphanumeric(peek()))
+    while (is_alphanumeric(peek_next()))
         advance();
 
-    const std::string literal = get_literal(start_itr);
+    const std::string literal = get_literal(start_itr, this->cursor_itr + 1);
+
+    PRINT(literal);
 
     // Check if it is a reserved keyword
     const auto search_keyword = keywords.find(literal);
 
     if (search_keyword != keywords.end()) {
         TokenType token = search_keyword->second;
-        add_token(token, literal);
+        add_token(token, literal, start_idx);
         return;
     }
 
@@ -352,7 +354,7 @@ void Lexer::literal_lexeme() {
     const auto found_datatype = ALL_DATATYPES.find(literal);
 
     if (found_datatype != ALL_DATATYPES.end()) {
-        add_token(TOKEN_DATATYPE, literal);
+        add_token(TOKEN_DATATYPE, literal, start_idx);
         return;
     }
 
@@ -368,6 +370,8 @@ void Lexer::zeros() {
 
     if (std::tolower(next) == 'x') {
         hex_numbers();
+    } else if (std::tolower(next) == 'e') {
+        math_numbers();
     } else if (std::tolower(next) == 'b') {
         binary_numbers();
     } else if (std::tolower(next) == 'o') {
@@ -378,9 +382,11 @@ void Lexer::zeros() {
         number_internal();
     } else {
         throw_lexer_error(INVALID_NUMBER);
-        return; // TODO: Break out of loop
+        exit(INVALID_NUMBER); // TODO: Break out of loop properly
     }
 }
+
+void Lexer::math_numbers() { special_number_internal(TOKEN_MATH_E, is_digit); }
 
 void Lexer::hex_numbers() { special_number_internal(TOKEN_HEX, is_hex); }
 
@@ -398,12 +404,10 @@ void Lexer::special_number_internal(TokenType token_type,
     advance(); // Go to symbol
     advance(); // Go to first number
 
-    while (filter(peek()) && !end_of_file())
+    while (filter(peek_next()))
         advance();
 
-    const auto literal = get_literal(starting_position);
-
-    // PRINT(literal);
+    const auto literal = get_literal(starting_position, this->cursor_itr + 1);
 
     add_token(token_type, literal);
 }
@@ -413,14 +417,16 @@ void Lexer::special_number_internal(TokenType token_type,
  *  This function handles each case where we can only
  *  have a normal int or float number.
  *  Since we can have different number types,
- *
+ * TODO:  support 10E9 notation
  */
 void Lexer::number_internal() {
     const auto start_position_itr = this->cursor_itr;
     const auto start_idx = this->cursor;
     bool is_float = false;
 
-    while (is_digit(peek()) && !end_of_file())
+    PRINT(peek());
+
+    while (is_digit(peek()))
         advance();
 
     if (peek() == '.' && is_digit(peek_next())) {
@@ -431,9 +437,7 @@ void Lexer::number_internal() {
             advance();
     }
 
-    const auto literal = get_literal(start_position_itr);
-
-    // PRINT(literal);
+    const auto literal = get_literal(start_position_itr, this->cursor_itr + 1);
 
     const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
 

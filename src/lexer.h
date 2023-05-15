@@ -59,6 +59,7 @@ typedef struct Lexer {
         void hex_numbers();
         void binary_numbers();
         void octal_numbers();
+        void math_numbers();
 
         void special_number_internal(TokenType token_type,
                                      std::function<bool(char)> filter);
@@ -108,8 +109,8 @@ typedef struct Lexer {
 
         const char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
 
-        const char peek_next() {
-            if (this->cursor_itr + 1 != this->data.end()) {
+        const char peek_next(u16 k = 1) {
+            if (this->cursor_itr + k != this->data.end()) {
                 return *(this->cursor_itr + 1);
             }
             return '\0';

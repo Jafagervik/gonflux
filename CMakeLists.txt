@@ -30,7 +30,7 @@ target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 
 # name of executable would be flux 
-add_executable(flux src/main.cpp src/lexer.cpp src/ast.cpp src/parser.cpp src/cache.cpp)
+add_executable(flux src/main.cpp src/lexer.cpp src/parser.cpp src/cache.cpp)
 
 # target_compile_options(./build/flux PRIVATE -o3)
 add_compile_options(-O2)
