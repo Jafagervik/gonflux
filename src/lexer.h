@@ -89,8 +89,21 @@ typedef struct Lexer {
 
         void add_token(TokenType type, const std::string lexeme,
                        u16 lexeme_start) {
-            u16 column = lexeme_start - this->beginning_of_line;
+            const u16 column = lexeme_start - this->beginning_of_line;
             const auto location = Location{.row = this->line,
+                                           .col = column,
+                                           .source_file = this->source_file};
+
+            this->token_list.push_back(
+                std::make_unique<Token>(type, location, lexeme));
+        }
+
+        // NOTE: Multiline tokens where we want position from earlier on
+        void add_token(TokenType type, const std::string lexeme,
+                       u16 lexeme_start_row, u16 lexeme_start_col,
+                       u32 lexeme_beginning_of_line) {
+            u16 column = lexeme_start_col - lexeme_beginning_of_line;
+            const auto location = Location{.row = lexeme_start_row,
                                            .col = column,
                                            .source_file = this->source_file};
 
