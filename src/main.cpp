@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <string_view>
-#include <utility>
 #include <vector>
 
 #include "args.h"
@@ -14,14 +12,14 @@
 #include "pch.h"
 #include "timer.h"
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
     const auto args = std::make_unique<ArgsParser>(ArgsParser(argc, argv));
 
     u32 status = args->parse_args();
     if (status != 0)
         return status;
 
-    std::cout << args->filename << std::endl;
+    // std::cout << args->filename << std::endl;
 
     std::ifstream file(args->filename, std::ios::binary);
 
@@ -37,11 +35,11 @@ int main(int argc, char *argv[]) {
 
     TIMER(lexer.tokenize);
 
-    std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
+    // std::cout << "Size of tokenlist: " << lexer.token_list.size() << "\n";
 
     // TODO: Tokenlist should be turned into iterator
-    // std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
-    //               [](const auto &t) { std::cout << *t << ' '; });
+    std::for_each(lexer.token_list.begin(), lexer.token_list.end(),
+                  [](const auto &t) { std::cout << *t << ' '; });
 
     file.close();
 

@@ -1,11 +1,6 @@
 #include "lexer.h"
-#include "constants.h"
-#include "token.h"
+#include "helpers.h"
 
-/** function tokenize goes through the main file and creates tokens out
- * of the ex
- *
- */
 void Lexer::tokenize() {
     while (!end_of_file()) {
         const auto curr_sym = peek();
@@ -37,19 +32,18 @@ void Lexer::tokenize() {
             break;
         case '/':
             if (match('/')) { // Single line comment
-                while (peek_neighbor() != '\n' && !end_of_file())
+                while (peek_next() != '\n' && !end_of_file())
                     advance();
             } else if (match('*')) { // FIXME: multiline comment
                 advance();
-                while (!end_of_file() && peek() != '*' &&
-                       peek_neighbor() != '/')
+                while (!end_of_file() && peek() != '*' && peek_next() != '/')
                     advance();
             } else if (match('=')) {
                 add_token(TOKEN_DIVIDEEQUAL);
             } else {
                 add_token(TOKEN_DIVIDE);
             }
-            advance();
+            // advance(); NOTE: do we need advance here really?
             break;
         case '*':
             if (match('=')) {
@@ -77,7 +71,7 @@ void Lexer::tokenize() {
             }
             advance();
             break;
-
+        // NOTE: Floats will be handled in the parser, not here
         case '-':
             if (match('>')) {
                 add_token(TOKEN_ARROW);
@@ -86,12 +80,10 @@ void Lexer::tokenize() {
             } else {
                 add_token(TOKEN_MINUS);
             }
-            advance();
             break;
         case '\n': // This is what happens when we go to a new line
             new_line();
             break;
-
         case '|':
             if (match('>')) {
                 add_token(TOKEN_PIPEGREATER);
@@ -101,7 +93,6 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITOR);
             }
             break;
-
         case '&':
             if (match('=')) {
                 add_token(TOKEN_BITANDEQUAL);
@@ -109,7 +100,6 @@ void Lexer::tokenize() {
                 add_token(TOKEN_BITAND);
             }
             break;
-
         case '~':
             if (match('=')) {
                 add_token(TOKEN_BITNOTEQUAL);
@@ -167,10 +157,11 @@ void Lexer::tokenize() {
             }
             break;
         case '@':
-            if (!is_char(peek_neighbor())) {
+            if (!is_char(peek_next())) {
                 add_token(TOKEN_ATSIGN);
             } else {
-                if (!builtin_lexeme()) {
+                if (!builtin_lexeme()) { // NOTE: Coding style differs from
+                                         // elsewhere
                     throw_lexer_error(BUILTIN_NOT_FOUND);
                     add_token(TOKEN_EOF); // NOTE: Early return
                     return;
@@ -209,9 +200,6 @@ void Lexer::tokenize() {
 
     // End of file
     add_token(TOKEN_EOF);
-
-    std::for_each(this->token_list.begin(), this->token_list.end(),
-                  [](const auto &t) { std::cout << *t << '\n'; });
 }
 
 /** function match
@@ -307,7 +295,7 @@ void Lexer::string_lexeme() {
  *  Simply using `exit` would not clean up memory in an effective manner
  */
 void Lexer::char_lexeme() {
-    advance(); // to go the char
+    advance(); // Go the char
 
     const std::string c = std::string(1, peek());
 
@@ -328,8 +316,6 @@ bool Lexer::builtin_lexeme() {
         advance();
 
     const std::string literal = get_literal(start_itr);
-
-    PRINT(literal);
 
     // Check if it is a reserved keyword
     const auto search_builtins = builtin_keywords.find(literal);
@@ -362,6 +348,7 @@ void Lexer::literal_lexeme() {
     }
 
     // Check if it is a datatype
+    // TODO: Discuss if datatype could just be an identifier as well
     const auto found_datatype = ALL_DATATYPES.find(literal);
 
     if (found_datatype != ALL_DATATYPES.end()) {
@@ -374,80 +361,83 @@ void Lexer::literal_lexeme() {
     add_token(TOKEN_IDENTIFIER, literal);
 }
 
-void Lexer::number_lexeme() {
-    if (peek() == '0') {
-        zeros();
-        return;
-    }
-
-    // NOTE: Not a float, can still be a number
-
-    const auto start_position_itr = this->cursor_itr;
-    const auto start_idx = this->cursor;
-
-    while (is_digit(peek()) && !end_of_file())
-        advance();
-
-    const std::string literal = get_literal(start_position_itr);
-
-    // TODO: handle float in this case
-    if (literal.find('.') != std::string::npos) {
-        return;
-    }
-}
+void Lexer::number_lexeme() { peek() == '0' ? zeros() : number_internal(); }
 
 void Lexer::zeros() {
-    // We need to pass this on down the states to iterate
-    const auto starting_position = this->cursor_itr;
-    const auto literal_start_idx = this->cursor;
+    const char next = peek_next();
 
-    auto next = peek_neighbor();
-
-    if (next == '.') {
-        advance();
-        floats(starting_position);
-    } else if (next == 'x' or next == 'X') {
-        advance();
-        hexnumbers(starting_position);
-    } else if (next == 'b' || next == 'B') {
-        advance();
-        binarynumbers(starting_position);
+    if (std::tolower(next) == 'x') {
+        hex_numbers();
+    } else if (std::tolower(next) == 'b') {
+        binary_numbers();
+    } else if (std::tolower(next) == 'o') {
+        octal_numbers();
+    } else if (is_digit(next) || next == '.') {
+        // If not a special case of numbers, just parse it as
+        // a case of integer or floating point number
+        number_internal();
+    } else {
+        throw_lexer_error(INVALID_NUMBER);
+        return; // TODO: Break out of loop
     }
-
-    // if were e down here, they just have a lot of numbers
-    while (is_digit(*this->cursor_itr) && !end_of_file())
-        advance();
-
-    const std::string literal = get_literal(starting_position);
-
-    add_token(TOKEN_INTEGER, literal);
 }
 
-void Lexer::floats(const std::vector<char>::iterator starting_position) {
+void Lexer::hex_numbers() { special_number_internal(TOKEN_HEX, is_hex); }
+
+void Lexer::binary_numbers() { special_number_internal(TOKEN_BIT, is_bit); }
+
+void Lexer::octal_numbers() { special_number_internal(TOKEN_OCTAL, is_octal); }
+
+// NOTE: Interal helper for special numbers
+void Lexer::special_number_internal(TokenType token_type,
+                                    std::function<bool(char)> filter) {
+    const auto starting_position = this->cursor_itr;
+    const auto literal_start_idx =
+        this->cursor; // NOTE: Use this for correct column
+
+    advance(); // Go to symbol
+    advance(); // Go to first number
+
+    while (filter(peek()) && !end_of_file())
+        advance();
+
+    const auto literal = get_literal(starting_position);
+
+    // PRINT(literal);
+
+    add_token(token_type, literal);
+}
+
+/** function number internal
+ *
+ *  This function handles each case where we can only
+ *  have a normal int or float number.
+ *  Since we can have different number types,
+ *
+ */
+void Lexer::number_internal() {
+    const auto start_position_itr = this->cursor_itr;
+    const auto start_idx = this->cursor;
+    bool is_float = false;
+
     while (is_digit(peek()) && !end_of_file())
         advance();
 
-    const std::string literal = get_literal(starting_position);
-
-    add_token(TOKEN_FLOAT, literal);
-}
-
-void Lexer::hexnumbers(const std::vector<char>::iterator starting_position) {
-    while (is_hex(peek()) && !end_of_file())
+    if (peek() == '.' && is_digit(peek_next())) {
+        is_float = true;
         advance();
 
-    const std::string literal = get_literal(starting_position);
+        while (is_digit(peek()) && !end_of_file())
+            advance();
+    }
 
-    add_token(TOKEN_HEX, literal);
-}
+    const auto literal = get_literal(start_position_itr);
 
-void Lexer::binarynumbers(const std::vector<char>::iterator starting_position) {
-    while (is_bit(peek()) && !end_of_file())
-        advance();
+    // PRINT(literal);
 
-    const std::string literal = get_literal(starting_position);
+    const auto token = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
 
-    add_token(TOKEN_BIT, literal);
+    add_token(token, literal);
 }
 
 // ===================================================

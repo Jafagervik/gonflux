@@ -8,8 +8,8 @@
  * in this project
  */
 typedef enum {
-    TOKEN_ARROW,              // -> For starting the block
-    TOKEN_COLON,              // : for return values
+    TOKEN_ARROW,              // ->
+    TOKEN_COLON,              // :
     TOKEN_EQUAL,              // =
     TOKEN_EQUALEQUAL,         // ==
     TOKEN_PLUSEQUAL,          // +=
@@ -31,68 +31,68 @@ typedef enum {
     TOKEN_BRACECLOSE,         // ]
     TOKEN_BRACKETOPEN,        // {
     TOKEN_BRACKETCLOSE,       // }
-    TOKEN_END,  // end     End is both a keyword and a assignment for somethings
-    TOKEN_PLUS, // +
-    TOKEN_MINUS,         // -
-    TOKEN_ASTERISK,      // *  multiply or dereferencing
-    TOKEN_DIVIDE,        // /
-    TOKEN_MODULO,        // %
-    TOKEN_POW,           // **
-    TOKEN_BITAND,        // &
-    TOKEN_BITNOT,        // ~
-    TOKEN_BITOR,         // |
-    TOKEN_BITXOR,        // ^
-    TOKEN_BITSHIFTLEFT,  // <<
-    TOKEN_BITSHIFTRIGHT, // >>
-    TOKEN_AND,           // and, or, not is operators here
-    TOKEN_OR,            // or
-    TOKEN_NOT,           // not
-    TOKEN_GREATER,       // >
-    TOKEN_LESS,          // <
-    TOKEN_NOTEQUAL,      // !=
-    TOKEN_GREATEREQUAL,  // >=
-    TOKEN_LESSEQUAL,     // <=
-    TOKEN_QUOTE,         // '
-    TOKEN_DOUBLEQUOTE,   // "
-    TOKEN_PIPEGREATER,   // |>
-    TOKEN_COLONCOLON,    //   ::
-    TOKEN_EQUALARROW,    //   =>
-    TOKEN_DOT,           // .
-    TOKEN_DOTDOT,        // .. range
-    TOKEN_DOTDOTEQUAL,   // ..= inclusive range
-    TOKEN_PLUSPLUS,      // ++ list and string concat
-    TOKEN_NEWLINE,       // \n
-    TOKEN_EOF,           // EOF
-    TOKEN_PIPE,          // |
-    TOKEN_ANDPERCEN,     // &  Can both be for bit logic and references
-    TOKEN_UNKNOWN,       // ???
-    TOKEN_COMMA,         // ,
-    TOKEN_ATSIGN,        // @ for builtins? hashtags??
-    TOKEN_UNDERSCORE,    // _ for patternmatching
-    TOKEN_NULL,          // null  DO WE WANT ?
-    TOKEN_IF,            // if
-    TOKEN_ELSEIF,        // elseif
-    TOKEN_ELSE,          // else
-    TOKEN_THEN,          // then
-    TOKEN_WHILE,         // while
-    TOKEN_FOR,           // for
-    TOKEN_MUT,           // mut
-    TOKEN_BREAK,         // break
-    TOKEN_MATCH,         // match
-    TOKEN_CONTINUE,      // continue
-    TOKEN_RETURN,        // return
-    TOKEN_THROW,         // throw
-    TOKEN_TRY,           // try
-    TOKEN_CATCH,         // catch
-    TOKEN_IMPORT,        // import
-    TOKEN_EXPORT,        // export
-    TOKEN_PUBLIC,        // pub or public
-    TOKEN_TYPE,          // type
-    TOKEN_INLINE,        // inline
-    TOKEN_TYPEOF,        // typeof
-    TOKEN_ENUM,          // enum
-    TOKEN_STRUCT,        // struct
-    TOKEN_ATOMIC,        // atomic before type marks it as an atomic!
+    TOKEN_END,                // end
+    TOKEN_PLUS,               // +
+    TOKEN_MINUS,              // -
+    TOKEN_ASTERISK,           // *
+    TOKEN_DIVIDE,             // /
+    TOKEN_MODULO,             // %
+    TOKEN_POW,                // **
+    TOKEN_BITAND,             // &
+    TOKEN_BITNOT,             // ~
+    TOKEN_BITOR,              // |
+    TOKEN_BITXOR,             // ^
+    TOKEN_BITSHIFTLEFT,       // <<
+    TOKEN_BITSHIFTRIGHT,      // >>
+    TOKEN_AND,                // and
+    TOKEN_OR,                 // or
+    TOKEN_NOT,                // not
+    TOKEN_GREATER,            // >
+    TOKEN_LESS,               // <
+    TOKEN_NOTEQUAL,           // !=
+    TOKEN_GREATEREQUAL,       // >=
+    TOKEN_LESSEQUAL,          // <=
+    TOKEN_QUOTE,              // '
+    TOKEN_DOUBLEQUOTE,        // "
+    TOKEN_PIPEGREATER,        // |>
+    TOKEN_COLONCOLON,         // ::
+    TOKEN_EQUALARROW,         // =>
+    TOKEN_DOT,                // .
+    TOKEN_DOTDOT,             // .. range
+    TOKEN_DOTDOTEQUAL,        // ..= inclusive range
+    TOKEN_PLUSPLUS,           // ++ list and string concat
+    TOKEN_NEWLINE,            // \n
+    TOKEN_EOF,                // EOF
+    TOKEN_PIPE,               // |
+    TOKEN_ANDPERCEN,          // &  Can both be for bit logic and references
+    TOKEN_UNKNOWN,            // ??? TODO: Remove?
+    TOKEN_COMMA,              // ,
+    TOKEN_ATSIGN,             // @ for builtins? hashtags??
+    TOKEN_UNDERSCORE,         // _ for patternmatching
+    TOKEN_NULL,               // null
+    TOKEN_IF,                 // if
+    TOKEN_ELSEIF,             // elseif
+    TOKEN_ELSE,               // else
+    TOKEN_THEN,               // then
+    TOKEN_WHILE,              // while
+    TOKEN_FOR,                // for
+    TOKEN_MUT,                // mut
+    TOKEN_BREAK,              // break
+    TOKEN_MATCH,              // match
+    TOKEN_CONTINUE,           // continue
+    TOKEN_RETURN,             // return
+    TOKEN_THROW,              // throw
+    TOKEN_TRY,                // try
+    TOKEN_CATCH,              // catch
+    TOKEN_IMPORT,             // import
+    TOKEN_EXPORT,             // export
+    TOKEN_PUBLIC,             // public
+    TOKEN_TYPE,               // type
+    TOKEN_INLINE,             // inline
+    TOKEN_TYPEOF,             // typeof
+    TOKEN_ENUM,               // enum
+    TOKEN_STRUCT,             // struct
+    TOKEN_ATOMIC,             // atomic before type marks it as an atomic!
     TOKEN_PARALLEL, // parallel could be used in front of loops to parallelize
     TOKEN_VOLATILE,
     TOKEN_COMPILETIME, // Compiletime variables!
@@ -101,6 +101,7 @@ typedef enum {
     //   Dtypes
     // ===================
     TOKEN_HEX,
+    TOKEN_OCTAL,
     TOKEN_BIT,
     TOKEN_INTEGER,    // 4
     TOKEN_FLOAT,      // 3.23
@@ -203,6 +204,7 @@ static const std::string nameTT[] = {
     "TOKEN_COMPILETIME",
     "TOKEN_IN",
     "TOKEN_HEX",
+    "TOKEN_OCTAL",
     "TOKEN_BIT",
     "TOKEN_INTEGER",
     "TOKEN_FLOAT",
@@ -219,11 +221,14 @@ typedef enum LEXER_ERROR {
     UNTERMINATED_CHAR,
     UNKNOWN_CHARACTER,
     INVALID_CHAR,
+    INVALID_FLOAT,
+    INVALID_NUMBER,
     BUILTIN_NOT_FOUND,
 } LEXER_ERROR;
 
 static const std::string nameLE[] = {"UNTERMINATED_STRING", "UNTERMINATED_CHAR",
-                                     "UNKNOWN_CHARACTER", "INVALID_CHAR",
+                                     "UNKNOWN_CHARACTER",   "INVALID_CHAR",
+                                     "INVALID_FLOAT",       "INVALID_NUMBER",
                                      "BUILTIN_NOT_FOUND"};
 
 typedef struct Location {
@@ -242,6 +247,7 @@ typedef struct Token {
         Location location;
         std::string lexeme;
 
+        // TODO: Look into using pointer instead of empty string
         Token(TokenType type, Location location, const std::string lexeme = "")
             : type{type}, location{location}, lexeme{lexeme} {}
 
@@ -254,7 +260,7 @@ typedef struct Token {
             os << nameTT[t.type];
 
             // If we dont have text we dont output it, just the type
-            if (t.lexeme == "") {
+            if (t.lexeme.empty()) {
                 return os << " " << t.location << '\n';
             }
             return os << " Lexeme: " << (t.lexeme)

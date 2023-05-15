@@ -5,11 +5,13 @@
 #include "token.h"
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <ostream>
-#include <string_view>
 #include <vector>
+
+using char_iter = std::vector<char>::iterator;
 
 typedef struct Lexer {
         // TODO: Add more files when dealing with
@@ -22,7 +24,7 @@ typedef struct Lexer {
         u32 beginning_of_literal; // needed for longer names to get accurate
                                   // starting point
         u16 line;                 // Incremented each \n
-        std::vector<char>::iterator cursor_itr;
+        char_iter cursor_itr;     // Iterator going through data
 
         Lexer(std::string source_file, std::vector<char> data)
             : source_file{source_file}, data{data}, cursor{0},
@@ -54,9 +56,13 @@ typedef struct Lexer {
         // More specific number handling
         //=============================================================
         void zeros();
-        void floats(const std::vector<char>::iterator starting_position);
-        void hexnumbers(const std::vector<char>::iterator starting_position);
-        void binarynumbers(const std::vector<char>::iterator starting_position);
+        void hex_numbers();
+        void binary_numbers();
+        void octal_numbers();
+
+        void special_number_internal(TokenType token_type,
+                                     std::function<bool(char)> filter);
+        void number_internal();
 
         // ===============================
         //   Helper methods
@@ -91,9 +97,18 @@ typedef struct Lexer {
                 std::make_unique<Token>(type, location, lexeme));
         }
 
-        char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
+        const std::string get_literal(const char_iter start) {
+            return std::string(start, this->cursor_itr);
+        }
 
-        char peek_neighbor() {
+        const std::string get_literal(const char_iter start,
+                                      const char_iter end) {
+            return std::string(start, end);
+        }
+
+        const char peek() { return end_of_file() ? '\0' : *this->cursor_itr; }
+
+        const char peek_next() {
             if (this->cursor_itr + 1 != this->data.end()) {
                 return *(this->cursor_itr + 1);
             }
@@ -107,37 +122,14 @@ typedef struct Lexer {
             return '\0';
         }
 
-        bool end_of_file() { return this->cursor_itr == this->data.end(); }
+        inline bool end_of_file() {
+            return this->cursor_itr == this->data.end();
+        }
 
         void advance() {
             ++this->cursor_itr;
             ++this->cursor;
         }
-
-        bool is_digit(const char c) { return c >= '0' && c <= '9'; }
-
-        bool is_bit(const char c) { return c == '0' || c == '1'; }
-
-        bool is_hex(const char c) {
-            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-                   (c >= 'A' && c <= 'F');
-        }
-
-        const std::string get_literal(const std::vector<char>::iterator start) {
-            return std::string(start, this->cursor_itr);
-        }
-
-        const std::string get_literal(const std::vector<char>::iterator start,
-                                      const std::vector<char>::iterator end) {
-            return std::string(start, end);
-        }
-
-        bool is_char(char c) {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                   (c == '_');
-        }
-
-        bool is_alphanumeric(char c) { return is_digit(c) || is_char(c); }
 
         // =========================================================
         // Lexer errors
